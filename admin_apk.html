@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - CheckIn</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f0f1a; font-family: 'Segoe UI', sans-serif;
+  color: #fff; min-height: 100vh;
+  display: flex; justify-content: center; padding: 20px;
+}
+.container {
+  width: 100%; max-width: 800px;
+}
+.header {
+  padding: 24px 0 20px;
+  border-bottom: 1px solid #1e1e32;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px;
+}
+.header h1 {
+  font-size: 24px; font-weight: 700;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .version { font-size: 12px; color: #444; }
+
+/* ===== Search Section ===== */
+.section {
+  background: #151525; border-radius: 16px;
+  padding: 20px; margin-bottom: 20px;
+}
+.section-title {
+  font-size: 14px; color: #888; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 16px;
+}
+.search-row {
+  display: flex; gap: 10px; align-items: center;
+}
+.search-input {
+  flex: 1; padding: 12px 16px;
+  background: #1a1a2e; border: 1px solid #2a2a42;
+  border-radius: 10px; color: #fff; font-size: 15px;
+  outline: none;
+}
+.search-input:focus { border-color: #6c5ce7; }
+.search-input::placeholder { color: #444; }
+.btn {
+  padding: 12px 24px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.3s; letter-spacing: 1px;
+}
+.btn-search {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff;
+}
+.btn-search:hover { transform: scale(1.03); }
+
+/* ===== Result Section ===== */
+.result-card {
+  display: none;
+}
+.result-card.show { display: block; }
+
+.result-row {
+  display: grid; grid-template-columns: 150px 1fr;
+  padding: 12px 0; border-bottom: 1px solid #1e1e32;
+  align-items: center;
+}
+.result-row:last-child { border-bottom: none; }
+.result-label { font-size: 13px; color: #666; }
+.result-value { font-size: 15px; color: #fff; font-weight: 600; }
+
+/* Milestone badges */
+.ms-badges {
+  display: flex; gap: 10px; margin-top: 6px;
+}
+.ms-badge {
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700;
+  background: #1a1a2e; color: #444;
+  border: 1px solid #2a2a42;
+}
+.ms-badge.claimed {
+  background: #1a1530; border-color: #6c5ce7;
+  color: #a29bfe;
+}
+
+/* ===== Actions ===== */
+.action-btns {
+  display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+}
+.btn-reset {
+  background: #2a2a42; color: #a29bfe;
+}
+.btn-reset:hover { background: #3a3a55; }
+
+/* ===== Add Invite ===== */
+.add-row {
+  display: flex; gap: 10px;
+}
+.btn-add {
+  background: linear-gradient(135deg, #00cec9, #00b894);
+  color: #fff;
+}
+.btn-add:hover { transform: scale(1.03); }
+
+/* ===== Messages ===== */
+.msg {
+  margin-top: 10px; font-size: 13px; font-weight: 600; min-height: 18px;
+}
+.msg.error { color: #e17055; }
+.msg.success { color: #00cec9; }
+
+/* Modal */
+.modal {
+  display: none; position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+  justify-content: center; align-items: center; z-index: 100;
+}
+.modal.show { display: flex; }
+.modal-box {
+  background: #151525; border-radius: 16px; padding: 24px;
+  max-width: 400px; width: 90%;
+}
+.modal-box h3 { font-size: 18px; margin-bottom: 16px; }
+.modal-box input {
+  width: 100%; padding: 12px 16px;
+  background: #1a1a2e; border: 1px solid #2a2a42;
+  border-radius: 10px; color: #fff; font-size: 15px;
+  outline: none; margin-bottom: 12px;
+}
+.modal-box input:focus { border-color: #6c5ce7; }
+.modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.btn-cancel {
+  background: #2a2a42; color: #888;
+}
+
+/* Not found */
+.not-found {
+  text-align: center; padding: 30px;
+  color: #555; font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Admin Panel</h1>
+    <span class="version">CheckIn System</span>
+  </div>
+
+  <!-- Search -->
+  <div class="section">
+    <div class="section-title">Search User by Code</div>
+    <div class="search-row">
+      <input class="search-input" id="searchCode" placeholder="Enter code (e.g. 00001)" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn btn-search" onclick="doSearch()">SEARCH</button>
+    </div>
+    <div class="msg" id="searchMsg"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="section result-card" id="resultCard">
+    <div class="section-title">User Details</div>
+    <div class="result-row">
+      <span class="result-label">Invite Code</span>
+      <span class="result-value" id="rCode">-</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Phone</span>
+      <span class="result-value" id="rPhone">-</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Total Days</span>
+      <span class="result-value" id="rDays">0</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Registered</span>
+      <span class="result-value" id="rCreated">-</span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Milestones</span>
+      <div class="ms-badges" id="rMilestones"></div>
+    </div>
+
+    <div class="action-btns">
+      <button class="btn btn-reset" onclick="openResetModal()">Reset Password</button>
+    </div>
+  </div>
+
+  <!-- Add Invite -->
+  <div class="section">
+    <div class="section-title">Add Invite Code</div>
+    <div class="add-row">
+      <input class="search-input" id="newCode" placeholder="Enter invite code" style="letter-spacing:1px;">
+      <button class="btn btn-add" onclick="doAddInvite()">ADD</button>
+    </div>
+    <div class="msg" id="addMsg"></div>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal" id="resetModal">
+  <div class="modal-box">
+    <h3>Reset Password</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:12px;">
+      For invite code: <span id="modalCode" style="color:#a29bfe;">-</span>
+    </p>
+    <input type="password" id="newPassword" placeholder="New password (min 6 chars)" autocomplete="new-password">
+    <div class="msg" id="resetMsg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeResetModal()">Cancel</button>
+      <button class="btn btn-search" onclick="doResetPassword()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://https://checkin-system-dok2.onrender.com';
+const ADMIN_TOKEN = 'admin-token-change-me';
+
+let currentSearchCode = '';
+
+function msgEl(id) { return document.getElementById(id); }
+
+function showMsg(elId, msg, cls) {
+  const el = msgEl(elId);
+  el.textContent = msg;
+  el.className = 'msg ' + cls;
+  setTimeout(() => { el.textContent = ''; el.className = 'msg'; }, 4000);
+}
+
+async function doSearch() {
+  const code = msgEl('searchCode').value.trim();
+  if (!code) { showMsg('searchMsg', 'Please enter a code', 'error'); return; }
+
+  currentSearchCode = code;
+
+  try {
+    const res = await fetch(API_BASE + '/api/admin/search?code=' + encodeURIComponent(code), {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+
+    if (!data.found) {
+      msgEl('resultCard').classList.remove('show');
+      showMsg('searchMsg', 'Code not registered yet', 'error');
+      return;
+    }
+
+    msgEl('rCode').textContent = data.inviteCode;
+    msgEl('rPhone').textContent = data.phone;
+    msgEl('rDays').textContent = data.totalDays;
+    msgEl('rCreated').textContent = data.createdAt ? data.createdAt.slice(0, 10) : '-';
+
+    // Milestones
+    const msContainer = msgEl('rMilestones');
+    msContainer.innerHTML = '';
+    [{key:'day7',label:'Day 7'},{key:'day14',label:'Day 14'},{key:'day21',label:'Day 21'},{key:'day30',label:'Day 30'}].forEach(m => {
+      const badge = document.createElement('div');
+      badge.className = 'ms-badge' + (data[m.key] ? ' claimed' : '');
+      badge.textContent = m.label + (data[m.key] ? ' âœ“' : '');
+      msContainer.appendChild(badge);
+    });
+
+    msgEl('resultCard').classList.add('show');
+    showMsg('searchMsg', '', '');
+  } catch (e) {
+    showMsg('searchMsg', 'Network error', 'error');
+  }
+}
+
+function openResetModal() {
+  msgEl('modalCode').textContent = currentSearchCode;
+  msgEl('newPassword').value = '';
+  msgEl('resetMsg').textContent = '';
+  msgEl('resetModal').classList.add('show');
+}
+
+function closeResetModal() {
+  msgEl('resetModal').classList.remove('show');
+}
+
+async function doResetPassword() {
+  const newPassword = msgEl('newPassword').value;
+  if (!newPassword || newPassword.length < 6) {
+    showMsg('resetMsg', 'Password must be at least 6 characters', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + '/api/admin/reset-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': ADMIN_TOKEN
+      },
+      body: JSON.stringify({ code: currentSearchCode, newPassword })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showMsg('resetMsg', 'Password reset successful!', 'success');
+      setTimeout(closeResetModal, 1200);
+    } else {
+      showMsg('resetMsg', data.error || 'Failed', 'error');
+    }
+  } catch (e) {
+    showMsg('resetMsg', 'Network error', 'error');
+  }
+}
+
+async function doAddInvite() {
+  const code = msgEl('newCode').value.trim().toUpperCase();
+  if (!code) {
+    showMsg('addMsg', 'Please enter an invite code', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + '/api/admin/add-invite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': ADMIN_TOKEN
+      },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showMsg('addMsg', data.message, 'success');
+      msgEl('newCode').value = '';
+    } else {
+      showMsg('addMsg', data.error || 'Failed', 'error');
+    }
+  } catch (e) {
+    showMsg('addMsg', 'Network error', 'error');
+  }
+}
+</script>
+</body>
+</html>

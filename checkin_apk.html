@@ -1,0 +1,590 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CheckIn</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a1a2e;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; font-family: 'Segoe UI', sans-serif;
+}
+.phone {
+  width: 390px; min-height: 780px;
+  background: #0f0f1a;
+  border-radius: 36px;
+  padding: 18px 16px 80px;
+  position: relative;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* Header */
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 2px 8px;
+}
+.app-title {
+  font-size: 22px; font-weight: 700; color: #fff; letter-spacing: 1px;
+}
+.clock {
+  font-size: 12px; color: #aaa; font-family: 'Courier New', monospace;
+  text-align: right; line-height: 1.3;
+}
+.clock .time { font-size: 15px; color: #ddd; font-weight: 600; }
+.clock .date { font-size: 11px; color: #777; }
+
+/* Logout & User info */
+.user-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 2px 4px;
+}
+.user-code {
+  font-size: 11px; color: #555;
+}
+.logout-btn {
+  background: none; border: 1px solid #2a2a42; color: #666;
+  padding: 4px 12px; border-radius: 8px; font-size: 11px;
+  cursor: pointer; transition: all 0.2s;
+}
+.logout-btn:hover { border-color: #6c5ce7; color: #a29bfe; }
+
+/* Day Counter */
+.day-counter { text-align: center; padding: 4px 0; }
+.day-label {
+  font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 4px;
+}
+.day-number {
+  font-size: 88px; font-weight: 800; line-height: 1.05;
+  background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.day-sub { font-size: 13px; color: #666; margin-top: -4px; }
+
+/* ======= 30-Day Grid ======= */
+.grid-section {
+  background: #151525; border-radius: 16px;
+  padding: 14px 12px; margin: 12px 0;
+}
+.grid-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.grid-title {
+  font-size: 13px; color: #777; text-transform: uppercase;
+}
+.grid-legend {
+  display: flex; gap: 12px; font-size: 10px; color: #555; align-items: center;
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 4px;
+}
+.legend-dot.done { background: #6c5ce7; }
+.legend-dot.pending { background: #1e1e32; border: 1px solid #333; }
+.legend-dot.milestone { background: #1e1e32; border: 1.5px solid #f9ca24; }
+
+.day-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+}
+.grid-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  transition: all 0.3s;
+  position: relative;
+}
+.grid-day.done {
+  background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+}
+.grid-day.pending {
+  background: #1a1a2e; color: #444;
+  border: 1px solid #1f1f33;
+}
+.grid-day.milestone-marker {
+  border: 1.5px solid #f9ca24 !important;
+}
+.grid-day.today {
+  border: 1.5px solid #a29bfe !important;
+  animation: todayPulse 2s infinite;
+}
+@keyframes todayPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(162,155,254,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(162,155,254,0); }
+}
+.grid-day .badge {
+  position: absolute; top: -4px; right: -4px;
+  font-size: 9px; line-height: 1;
+}
+
+/* ======= Progress bar ======= */
+.progress-bar-bg {
+  height: 6px; background: #1e1e32; border-radius: 3px;
+  overflow: hidden; margin: 8px 0 12px;
+}
+.progress-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+  border-radius: 3px; transition: width 0.5s ease;
+}
+
+/* ======= Milestone cards ======= */
+.milestone-cards {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  margin: 10px 0;
+}
+.ms-card {
+  background: #151525; border-radius: 14px; padding: 12px 6px;
+  text-align: center; transition: all 0.3s;
+  border: 1.5px solid transparent;
+}
+.ms-card.achieved {
+  background: #1a1530; border-color: #6c5ce7;
+  box-shadow: 0 0 20px rgba(108,92,231,0.15);
+}
+.ms-card .ms-icon { width: 36px; height: 36px; object-fit: contain; margin-bottom: 4px; }
+.ms-card .ms-day {
+  font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px;
+}
+.ms-card .ms-reward { font-size: 10px; color: #555; }
+.ms-card.achieved .ms-reward { color: #a29bfe; }
+
+/* ======= Check-in Button ======= */
+.btn-area { text-align: center; padding: 10px 0 4px; }
+.checkin-btn {
+  width: 120px; height: 120px; border-radius: 50%;
+  border: none; font-size: 18px; font-weight: 800;
+  cursor: pointer; transition: all 0.3s;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff; box-shadow: 0 8px 30px rgba(108,92,231,0.4);
+  letter-spacing: 1px;
+}
+.checkin-btn:hover { transform: scale(1.04); }
+.checkin-btn:active { transform: scale(0.96); }
+.checkin-btn.done {
+  background: #1e1e32; color: #6c5ce7;
+  box-shadow: 0 0 0 3px #6c5ce7;
+}
+.status-msg {
+  margin-top: 10px; font-size: 13px; font-weight: 600;
+  min-height: 18px; transition: all 0.3s;
+}
+.status-msg.success { color: #00cec9; }
+.status-msg.already { color: #fdcb6e; }
+.status-msg.broken { color: #e17055; }
+
+/* ======= Reward Overlay ======= */
+.overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.reward-card {
+  border-radius: 24px;
+  padding: 12px 12px 20px;
+  text-align: center; max-width: 340px; width: 88%;
+  position: relative;
+}
+.reward-close {
+  position: absolute; top: 8px; right: 12px;
+  background: rgba(255,255,255,0.1); border: none;
+  color: #aaa; font-size: 20px; width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; line-height: 1;
+  transition: all 0.2s; z-index: 1;
+}
+.reward-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.reward-gif {
+  width: 100%; border-radius: 12px; display: block;
+}
+.reward-claim {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff; border: none; padding: 14px 40px;
+  border-radius: 30px; font-size: 16px; font-weight: 700;
+  cursor: pointer; width: 100%;
+}
+
+/* ======= Daily GIF Popup ======= */
+.daily-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8); display: flex;
+  justify-content: center; align-items: center;
+  z-index: 100; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.daily-overlay.show { opacity: 1; pointer-events: all; }
+.daily-card {
+  border-radius: 24px;
+  padding: 12px 12px 20px;
+  text-align: center; max-width: 340px; width: 88%;
+  position: relative;
+}
+.daily-close {
+  position: absolute; top: 8px; right: 12px;
+  background: rgba(255,255,255,0.1); border: none;
+  color: #aaa; font-size: 20px; width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; line-height: 1;
+  transition: all 0.2s;
+}
+.daily-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.daily-gif {
+  width: 100%; border-radius: 12px; display: block;
+}
+.daily-claim-text {
+  margin-top: 12px; font-size: 15px; font-weight: 700;
+  color: #f9ca24; letter-spacing: 1px;
+}
+
+/* ======= Bottom Nav ======= */
+.bottom-nav {
+  position: absolute; bottom: 16px; left: 16px; right: 16px;
+  display: flex; justify-content: space-around;
+  padding: 10px 0; background: #1a1a2e; border-radius: 20px;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: #555; font-size: 10px;
+}
+.nav-item.active { color: #a29bfe; }
+.nav-icon { font-size: 18px; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+  <!-- Tab: Rewards -->
+  <div class="tab-page" id="tabRewards">
+  <div class="header">
+    <div class="app-title">CheckIn</div>
+    <div class="clock">
+      <div class="time" id="clockTime">--:--</div>
+      <div class="date" id="clockDate">--/--/----</div>
+    </div>
+  </div>
+
+  <div class="user-bar">
+    <span class="user-code" id="userCode">--</span>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="day-counter">
+    <div class="day-number" id="dayNum">0</div>
+    <div class="day-sub" id="daySub">days</div>
+  </div>
+
+  <!-- 30-Day Grid -->
+  <div class="grid-section">
+    <div class="grid-header">
+      <div class="grid-title" id="gridTitle">Daily Random RM8 ~ RM388</div>
+      <div class="grid-legend">
+        <span><span class="legend-dot done"></span> Done</span>
+        <span><span class="legend-dot pending"></span> Open</span>
+        <span><span class="legend-dot milestone"></span> Bonus</span>
+      </div>
+    </div>
+    <div class="day-grid" id="dayGrid"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- Milestone Cards -->
+  <div class="milestone-cards" id="milestoneCards"></div>
+
+  <!-- Button -->
+  <div class="btn-area">
+    <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">CHECK IN</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+  </div><!-- /tabRewards -->
+
+  <!-- Tab: Slot Win Rate -->
+  <div class="tab-page" id="tabSlot" style="display:none">
+    <iframe id="slotFrame" src="slot.html" style="width:100%;height:100%;border:none;position:absolute;top:0;left:0;"></iframe>
+  </div><!-- /tabSlot -->
+
+  <div class="bottom-nav">
+    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">ðŸŽ</span>Rewards</div>
+    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">ðŸŽ°</span>Slot Win Rate</div>
+  </div>
+</div>
+
+<div class="overlay" id="rewardOverlay">
+  <div class="reward-card">
+    <button class="reward-close" onclick="claimReward()">&times;</button>
+    <img class="reward-gif" id="rewardGif" src="" alt="Reward" />
+    <div class="daily-claim-text">Pls Screenshot To Claim</div>
+    <button class="reward-claim" onclick="claimReward()">CLAIM</button>
+  </div>
+</div>
+
+<!-- Daily GIF Popup -->
+<div class="daily-overlay" id="dailyOverlay">
+  <div class="daily-card">
+    <button class="daily-close" onclick="closeDailyPopup()">&times;</button>
+    <img class="daily-gif" src="daily.gif" alt="Daily Reward" />
+    <div class="daily-claim-text">Pls Screenshot To Claim</div>
+  </div>
+</div>
+
+<script>
+// ========== Auth ==========
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
+let token, user;
+
+function checkAuth() {
+  token = localStorage.getItem('checkin_token');
+  const userStr = localStorage.getItem('checkin_user');
+  if (!token || !userStr) {
+    window.location.href = 'login_apk.html';
+    return false;
+  }
+  user = JSON.parse(userStr);
+  document.getElementById('userCode').textContent = user.inviteCode || user.phone;
+  return true;
+}
+
+function doLogout() {
+  localStorage.removeItem('checkin_token');
+  localStorage.removeItem('checkin_user');
+  window.location.href = 'login_apk.html';
+}
+
+// ========== API ==========
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+// ========== State ==========
+let appState = {
+  totalDays: 0,
+  checkedToday: false,
+  streakDay: 0,
+  milestonesClaimed: { day7: 0, day14: 0, day21: 0, day30: 0 },
+  history: [],
+  lastDate: null
+};
+
+async function loadState() {
+  try {
+    const data = await apiGet('/api/checkin/status');
+    if (!data.success) return;
+    appState.totalDays = data.totalDays;
+    appState.checkedToday = data.checkedToday;
+    appState.streakDay = data.streakDay;
+    appState.milestonesClaimed = data.milestonesClaimed;
+    appState.history = data.history || [];
+    appState.lastDate = data.lastDate;
+  } catch (e) {
+    console.error('Failed to load state:', e);
+  }
+  updateUI();
+}
+
+function isTodayChecked() {
+  return appState.checkedToday;
+}
+
+// ========== Logic ==========
+async function doCheckin() {
+  if (appState.checkedToday) {
+    showStatus("You've checked in today!", 'already');
+    return;
+  }
+
+  try {
+    const data = await apiPost('/api/checkin', {});
+    if (data.error) {
+      showStatus(data.error, 'already');
+      return;
+    }
+
+    appState.checkedToday = data.checkedToday;
+    appState.streakDay = data.streakDay;
+    appState.totalDays = data.streakDay;
+    appState.lastDate = new Date().toISOString().slice(0, 10);
+    if (!appState.history.includes(appState.lastDate)) {
+      appState.history.push(appState.lastDate);
+    }
+
+    if (data.newMilestone > 0) {
+      appState.milestonesClaimed['day' + data.newMilestone] = 1;
+      updateUI();
+      showReward(data.newMilestone);
+      return;
+    }
+
+    updateUI();
+    document.getElementById('dailyOverlay').classList.add('show');
+  } catch (e) {
+    showStatus('Network error, please try again', 'broken');
+  }
+}
+
+function closeDailyPopup() {
+  document.getElementById('dailyOverlay').classList.remove('show');
+  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+}
+
+let currentRewardDay = 0;
+
+function showReward(day) {
+  const gifs = { 7:'day7.gif', 14:'day14.gif', 21:'day21.gif', 30:'day30.gif' };
+  currentRewardDay = day;
+  document.getElementById('rewardGif').src = gifs[day];
+  document.getElementById('rewardOverlay').classList.add('show');
+}
+
+function claimReward() {
+  document.getElementById('rewardOverlay').classList.remove('show');
+  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+}
+
+function showStatus(msg, cls) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + cls;
+  setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
+}
+
+// ========== UI ==========
+function updateUI() {
+  const streak = appState.streakDay;
+  const totalDays = appState.totalDays;
+  const milestoneDays = [7, 14, 21, 30];
+  const icons = ['day7.gif','day14.gif','day21.gif','day30.gif'];
+  const labels = ['Day 7','Day 14','Day 21','Day 30'];
+
+  document.getElementById('dayNum').textContent = totalDays;
+
+  // Progress bar
+  document.getElementById('progressBar').style.width = Math.min(totalDays / 30 * 100, 100) + '%';
+
+  // 30-Day Grid
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = '';
+  const lastDone = Math.min(totalDays, 30);
+
+  for (let i = 1; i <= 30; i++) {
+    const div = document.createElement('div');
+    div.className = 'grid-day';
+    div.textContent = i;
+
+    if (i <= lastDone) {
+      div.classList.add('done');
+    } else {
+      div.classList.add('pending');
+    }
+
+    if (milestoneDays.includes(i) && i > lastDone) {
+      div.classList.add('milestone-marker');
+    }
+
+    if (i === lastDone + 1 && !isTodayChecked() && lastDone < 30) {
+      div.classList.add('today');
+    }
+    if (i === lastDone && isTodayChecked() && lastDone > 0) {
+      div.classList.add('today');
+    }
+
+    if (milestoneDays.includes(i)) {
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = appState.milestonesClaimed['day' + i] ? 'âœ“' : 'â­';
+      div.appendChild(badge);
+    }
+
+    grid.appendChild(div);
+  }
+
+  // Milestone cards
+  const cardsContainer = document.getElementById('milestoneCards');
+  cardsContainer.innerHTML = '';
+  milestoneDays.forEach((m, idx) => {
+    const card = document.createElement('div');
+    card.className = 'ms-card';
+    if (appState.milestonesClaimed['day' + m]) card.classList.add('achieved');
+
+    const icon = document.createElement('img');
+    icon.className = 'ms-icon';
+    icon.src = icons[idx];
+    icon.alt = labels[idx];
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'ms-day';
+    dayEl.textContent = labels[idx];
+
+    const reward = document.createElement('div');
+    reward.className = 'ms-reward';
+    reward.textContent = appState.milestonesClaimed['day' + m] ? 'âœ“ Bonus' : 'Bonus';
+
+    card.appendChild(icon);
+    card.appendChild(dayEl);
+    card.appendChild(reward);
+    cardsContainer.appendChild(card);
+  });
+
+  // Check-in button
+  const btn = document.getElementById('checkinBtn');
+  if (isTodayChecked()) {
+    btn.textContent = 'CHECKED';
+    btn.className = 'checkin-btn done';
+  } else {
+    btn.textContent = 'CHECK IN';
+    btn.className = 'checkin-btn';
+  }
+}
+
+// ========== Init ==========
+if (checkAuth()) {
+  loadState();
+}
+
+function switchTab(tab) {
+  document.getElementById('tabRewards').style.display = tab === 'rewards' ? 'block' : 'none';
+  document.getElementById('tabSlot').style.display = tab === 'slot' ? 'block' : 'none';
+  document.getElementById('navRewards').classList.toggle('active', tab === 'rewards');
+  document.getElementById('navSlot').classList.toggle('active', tab === 'slot');
+}
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const MM = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  document.getElementById('clockTime').textContent = hh + ':' + mm;
+  document.getElementById('clockDate').textContent = dd + '/' + MM + '/' + yyyy;
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

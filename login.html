@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Login - CheckIn</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a1a2e;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; font-family: 'Segoe UI', sans-serif;
+}
+.phone {
+  width: 390px; min-height: 780px;
+  background: #0f0f1a;
+  border-radius: 36px;
+  padding: 60px 24px 80px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column; align-items: center;
+}
+.logo {
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #fff; font-weight: 800;
+  margin-bottom: 12px;
+}
+.title {
+  font-size: 22px; font-weight: 700; color: #fff;
+  margin-bottom: 6px;
+}
+.subtitle {
+  font-size: 13px; color: #666; margin-bottom: 36px;
+}
+
+.form-group {
+  width: 100%; margin-bottom: 18px;
+}
+.form-group label {
+  display: block; font-size: 12px; color: #888;
+  margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;
+}
+.form-group input {
+  width: 100%; padding: 14px 16px;
+  background: #151525; border: 1px solid #2a2a42;
+  border-radius: 12px; color: #fff; font-size: 15px;
+  outline: none; transition: border 0.3s;
+}
+.form-group input:focus { border-color: #6c5ce7; }
+.form-group input::placeholder { color: #444; }
+
+.btn {
+  width: 100%; padding: 16px;
+  border: none; border-radius: 14px;
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.3s; letter-spacing: 1px;
+  margin-top: 10px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff; box-shadow: 0 6px 20px rgba(108,92,231,0.3);
+}
+.btn-primary:hover { transform: scale(1.02); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.link {
+  margin-top: 20px; font-size: 13px; color: #666;
+}
+.link a {
+  color: #a29bfe; text-decoration: none; font-weight: 600;
+}
+.link a:hover { text-decoration: underline; }
+
+.msg {
+  margin-top: 12px; font-size: 13px; font-weight: 600;
+  text-align: center; min-height: 18px;
+}
+.msg.error { color: #e17055; }
+.msg.success { color: #00cec9; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="loginPage">
+  <div class="logo">C</div>
+  <div class="title">Welcome Back</div>
+  <div class="subtitle">Sign in to continue your check-in</div>
+
+  <div class="form-group">
+    <label>Phone Number</label>
+    <input type="tel" id="phone" placeholder="01112345678" autocomplete="tel">
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+  </div>
+
+  <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">SIGN IN</button>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="link">Don't have an account? <a href="register.html">Register</a></div>
+
+
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+
+function showMsg(elId, msg, type) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.className = 'msg ' + type;
+}
+
+async function doLogin() {
+  const phone = document.getElementById('phone').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!phone || !password) {
+    showMsg('msg', 'Phone and password are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  try {
+    const res = await fetch(API_BASE + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('checkin_token', data.token);
+      localStorage.setItem('checkin_user', JSON.stringify(data.user));
+      showMsg('msg', 'Login successful! Redirecting...', 'success');
+      setTimeout(() => { window.location.href = 'checkin.html'; }, 800);
+    } else {
+      showMsg('msg', data.error || 'Login failed', 'error');
+      btn.disabled = false;
+      btn.textContent = 'SIGN IN';
+    }
+  } catch (e) {
+    showMsg('msg', 'Network error', 'error');
+    btn.disabled = false;
+    btn.textContent = 'SIGN IN';
+  }
+}
+
+document.getElementById('password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
