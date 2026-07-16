@@ -107,7 +107,7 @@ initDB().then(() => {
     res.json({ success: true, token, user: { phone: user.phone, inviteCode: user.invite_code, totalDays: user.total_days, day7: user.day7, day14: user.day14, day21: user.day21, day30: user.day30 } });
   });
 
-  app.post('/api/change-password', async (req, res) => {
+  app.post('/api/change-password', authMiddleware, async (req, res) => {
     const { oldPassword, newPassword } = req.body;
     if (!oldPassword || !newPassword) return res.status(400).json({ error: '旧密码和新密码为必填项' });
     if (newPassword.length < 6) return res.status(400).json({ error: '新密码至少 6 位' });
@@ -117,7 +117,7 @@ initDB().then(() => {
     res.json({ success: true, message: '密码修改成功' });
   });
 
-  app.get('/api/checkin/status', async (req, res) => {
+  app.get('/api/checkin/status', authMiddleware, async (req, res) => {
     const user = await getRow('SELECT * FROM users WHERE id = ?', [req.userId]);
     const today = new Date().toISOString().slice(0, 10);
     const todayCheckin = await getRow('SELECT * FROM checkins WHERE user_id = ? AND checkin_date = ?', [req.userId, today]);
@@ -125,7 +125,7 @@ initDB().then(() => {
     res.json({ success: true, totalDays: user.total_days, checkedToday: !!todayCheckin, streakDay: todayCheckin ? todayCheckin.streak_day : 0, milestonesClaimed: { day7: user.day7, day14: user.day14, day21: user.day21, day30: user.day30 }, history: allCheckins.map(c => c.checkin_date), lastDate: allCheckins.length > 0 ? allCheckins[allCheckins.length - 1].checkin_date : null });
   });
 
-  app.post('/api/checkin', async (req, res) => {
+  app.post('/api/checkin', authMiddleware, async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     const already = await getRow('SELECT id FROM checkins WHERE user_id = ? AND checkin_date = ?', [req.userId, today]);
     if (already) return res.status(400).json({ error: '今天已签到' });
@@ -142,7 +142,7 @@ initDB().then(() => {
     res.json({ success: true, streakDay, newMilestone, checkedToday: true });
   });
 
-  app.post('/api/checkin-test', async (req, res) => {
+  app.post('/api/checkin-test', authMiddleware, async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     const user = await getRow('SELECT * FROM users WHERE id = ?', [req.userId]);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -159,7 +159,7 @@ initDB().then(() => {
     res.json({ success: true, streakDay, totalDays: updatedUser.total_days, newMilestone, checkedToday: true });
   });
 
-  app.post('/api/checkin-test/reset', async (req, res) => {
+  app.post('/api/checkin-test/reset', authMiddleware, async (req, res) => {
     await exec('DELETE FROM checkins WHERE user_id = ?', [req.userId]);
     await exec('UPDATE users SET total_days = 0, day7 = 0, day14 = 0, day21 = 0, day30 = 0 WHERE id = ?', [req.userId]);
     res.json({ success: true, message: 'Reset complete' });
