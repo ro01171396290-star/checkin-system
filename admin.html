@@ -170,6 +170,14 @@ body {
   transition: all 0.2s;
 }
 .btn-row-reset:hover { background: #3a2f55; border-color: #6c5ce7; }
+.btn-row-delete {
+  background: #2a1a1a; color: #e17055;
+  border: 1px solid #3a2a2a;
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-row-delete:hover { background: #3a2a2a; border-color: #e17055; }
 .empty-list {
   text-align: center; padding: 30px; color: #555; font-size: 13px;
 }
@@ -528,7 +536,8 @@ function renderCodeList(users) {
       '<td class="col-code">' + escapeHtml(u.invite_code) + '</td>' +
       '<td class="col-days">' + (u.total_days === 0 ? 0 : ((u.total_days - 1) % 30) + 1) + '</td>' +
       '<td class="col-date">' + (u.created_at ? u.created_at.slice(0, 10) : '-') + '</td>' +
-      '<td><button class="btn-row-reset" onclick="openResetByCode(\'' + escapeHtml(u.invite_code) + '\')">Reset Pass</button></td>';
+      '<td><button class="btn-row-reset" onclick="openResetByCode(\'' + escapeHtml(u.invite_code) + '\')">Reset Pass</button>' +
+      ' <button class="btn-row-delete" onclick="deleteUser(\'' + escapeHtml(u.invite_code) + '\')">Delete</button></td>';
     tbody.appendChild(tr);
   });
 }
@@ -549,6 +558,23 @@ function openResetByCode(code) {
   msgEl('newPassword').value = '';
   msgEl('resetMsg').textContent = '';
   msgEl('resetModal').classList.add('show');
+}
+
+async function deleteUser(code) {
+  if (!confirm('确定要删除 ' + code + ' 吗？删除后该号码和邀请码可重新注册。')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (data.success) {
+      loadCodeList();
+    } else {
+      alert(data.error || 'Delete failed');
+    }
+  } catch (e) { alert('Network error'); }
 }
 
 function escapeHtml(str) {

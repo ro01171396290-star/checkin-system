@@ -245,6 +245,19 @@ initDB().then(() => {
     res.json({ success: true, message: '手机号更新成功', newPhone });
   });
 
+  app.post('/api/admin/delete-user', adminMiddleware, (req, res) => {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: '代号为必填项' });
+    const fullCode = code.startsWith('SR-') ? code : 'SR-' + code.padStart(5, '0');
+    const user = getRow('SELECT id FROM users WHERE invite_code = ?', [fullCode]);
+    if (!user) return res.status(400).json({ error: '该代号尚未注册' });
+    db.run('DELETE FROM checkins WHERE user_id = ?', [user.id]);
+    db.run('DELETE FROM users WHERE id = ?', [user.id]);
+    db.run("UPDATE invite_codes SET status = 'unused' WHERE code = ?", [fullCode]);
+    saveDB();
+    res.json({ success: true, message: '用户已删除，号码和邀请码可重新注册' });
+  });
+
   app.get('/api/admin/users', adminMiddleware, (req, res) => {
     const users = getAll('SELECT phone, invite_code, total_days, created_at FROM users ORDER BY created_at DESC');
     res.json({ success: true, users });

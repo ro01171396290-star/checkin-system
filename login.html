@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -92,7 +92,7 @@ body {
 
   <div class="form-group">
     <label>Phone Number</label>
-    <input type="tel" id="phone" placeholder="01112345678" autocomplete="tel">
+    <input type="tel" id="phone" placeholder="+601112345678" autocomplete="tel">
   </div>
 
   <div class="form-group">
@@ -110,7 +110,7 @@ body {
 </div>
 
 <script>
-const API_BASE = window.location.origin;
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
 
 function showMsg(elId, msg, type) {
   const el = document.getElementById(elId);
@@ -124,6 +124,10 @@ async function doLogin() {
 
   if (!phone || !password) {
     showMsg('msg', 'Phone and password are required', 'error');
+    return;
+  }
+  if (!/^\+60\d{9,10}$/.test(phone)) {
+    showMsg('msg', 'Format: +60XXXXXXXXXX', 'error');
     return;
   }
 

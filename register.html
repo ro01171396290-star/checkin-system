@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -33,7 +33,7 @@ body {
   margin-bottom: 6px;
 }
 .subtitle {
-  font-size: 13px; color: #666; margin-bottom: 32px;
+  font-size: 13px; color: #aaa; margin-bottom: 32px;
   text-align: center;
 }
 
@@ -41,7 +41,7 @@ body {
   width: 100%; margin-bottom: 18px;
 }
 .form-group label {
-  display: block; font-size: 12px; color: #888;
+  display: block; font-size: 12px; color: #aaa;
   margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;
 }
 .form-group input {
@@ -53,10 +53,10 @@ body {
 .form-group input:focus {
   border-color: #6c5ce7;
 }
-.form-group input::placeholder { color: #444; }
+.form-group input::placeholder { color: #888; }
 
-.invite-hint {
-  font-size: 11px; color: #555; margin-top: 4px;
+.invite-hint, .field-hint {
+  font-size: 11px; color: #fff; margin-top: 4px;
 }
 
 .btn {
@@ -75,7 +75,7 @@ body {
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .link {
-  margin-top: 20px; font-size: 13px; color: #666;
+  margin-top: 20px; font-size: 13px; color: #aaa;
 }
 .link a {
   color: #a29bfe; text-decoration: none; font-weight: 600;
@@ -91,7 +91,7 @@ body {
 
 .api-host {
   position: absolute; top: 16px; right: 20px;
-  font-size: 10px; color: #333;
+  font-size: 10px; color: #888;
 }
 </style>
 </head>
@@ -104,19 +104,18 @@ body {
 
   <div class="form-group">
     <label>Phone Number</label>
-    <input type="tel" id="phone" placeholder="01112345678" autocomplete="tel">
+    <input type="tel" id="phone" placeholder="+601112345678" autocomplete="tel">
   </div>
 
   <div class="form-group">
     <label>Password</label>
-    <input type="password" id="password" placeholder="Min 6 characters" autocomplete="new-password">
+    <input type="password" id="password" placeholder="XXXXXXX" autocomplete="new-password">
   </div>
 
   <div class="form-group">
     <label>Invite Code</label>
-    <input type="text" id="inviteCode" placeholder="Get Invite Code From Customer Service" autocomplete="off" style="text-transform:uppercase;letter-spacing:1px;">
-
-  </div>
+    <input type="text" id="inviteCode" autocomplete="off" style="text-transform:uppercase;letter-spacing:1px;">
+    <div class="field-hint">Get Invite Code From Customer Service</div>  </div>
 
   <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">REGISTER</button>
 
@@ -126,8 +125,8 @@ body {
 </div>
 
 <script>
-// 自动检测部署环境
-const API_BASE = window.location.origin;
+// è‡ªåŠ¨æ£€æµ‹éƒ¨ç½²çŽ¯å¢ƒ
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
 
 function showMsg(msg, type) {
   const el = document.getElementById('msg');
@@ -142,6 +141,10 @@ async function doRegister() {
 
   if (!phone || !password || !inviteCode) {
     showMsg('All fields are required', 'error');
+    return;
+  }
+  if (!/^\+60\d{9,10}$/.test(phone)) {
+    showMsg('Phone format: +60XXXXXXXXXX', 'error');
     return;
   }
   if (password.length < 6) {
@@ -180,7 +183,7 @@ async function doRegister() {
   }
 }
 
-// 回车键提交
+// å›žè½¦é”®æäº¤
 document.getElementById('inviteCode').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doRegister();
 });

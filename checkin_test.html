@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -50,6 +50,12 @@ body {
   cursor: pointer; transition: all 0.2s;
 }
 .logout-btn:hover { border-color: #6c5ce7; color: #a29bfe; }
+.reset-btn {
+  background: none; border: 1px solid #3a1a1a; color: #c44;
+  padding: 4px 10px; border-radius: 8px; font-size: 11px;
+  cursor: pointer; transition: all 0.2s; margin-right: 6px;
+}
+.reset-btn:hover { border-color: #e74c3c; color: #ff6b6b; }
 
 /* Day Counter */
 .day-counter { text-align: center; padding: 4px 0; }
@@ -273,7 +279,10 @@ body {
 
   <div class="user-bar">
     <span class="user-code" id="userCode">--</span>
-    <button class="logout-btn" onclick="doLogout()">Logout</button>
+    <div>
+      <button class="reset-btn" onclick="doReset()">Reset</button>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
   </div>
 
   <div class="day-counter">
@@ -340,7 +349,7 @@ body {
 
 <script>
 // ========== Auth ==========
-const API_BASE = window.location.origin;
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
 let token, user;
 
 function checkAuth() {
@@ -422,7 +431,7 @@ async function doCheckin() {
 
     appState.checkedToday = data.checkedToday;
     appState.streakDay = data.streakDay;
-    appState.totalDays = data.streakDay;
+    appState.totalDays = data.totalDays;
     appState.lastDate = new Date().toISOString().slice(0, 10);
     if (!appState.history.includes(appState.lastDate)) {
       appState.history.push(appState.lastDate);
@@ -442,9 +451,27 @@ async function doCheckin() {
   }
 }
 
+async function doReset() {
+  try {
+    const data = await apiPost('/api/checkin-test/reset', {});
+    if (!data.success) { showStatus('Reset failed', 'broken'); return; }
+    appState.totalDays = 0;
+    appState.streakDay = 0;
+    appState.checkedToday = false;
+    appState.history = [];
+    appState.milestonesClaimed = { day7: 0, day14: 0, day21: 0, day30: 0 };
+    updateUI();
+    showStatus('Reset complete!', 'success');
+  } catch (e) {
+    showStatus('Network error', 'broken');
+  }
+}
+
 function closeDailyPopup() {
   document.getElementById('dailyOverlay').classList.remove('show');
-  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const nextDay = displayDay % 30 + 1;
+  showStatus("Come back tomorrow for Day " + nextDay + "!", 'success');
 }
 
 let currentRewardDay = 0;
@@ -458,7 +485,9 @@ function showReward(day) {
 
 function claimReward() {
   document.getElementById('rewardOverlay').classList.remove('show');
-  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const nextDay = displayDay % 30 + 1;
+  showStatus("Come back tomorrow for Day " + nextDay + "!", 'success');
 }
 
 function showStatus(msg, cls) {
@@ -472,19 +501,20 @@ function showStatus(msg, cls) {
 function updateUI() {
   const streak = appState.streakDay;
   const totalDays = appState.totalDays;
+  const displayDay = totalDays === 0 ? 0 : ((totalDays - 1) % 30) + 1;
   const milestoneDays = [7, 14, 21, 30];
   const icons = ['day7.gif','day14.gif','day21.gif','day30.gif'];
   const labels = ['Day 7','Day 14','Day 21','Day 30'];
 
-  document.getElementById('dayNum').textContent = totalDays;
+  document.getElementById('dayNum').textContent = displayDay;
 
   // Progress bar
-  document.getElementById('progressBar').style.width = Math.min(totalDays / 30 * 100, 100) + '%';
+  document.getElementById('progressBar').style.width = (displayDay / 30 * 100) + '%';
 
   // 30-Day Grid
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
-  const lastDone = Math.min(totalDays, 30);
+  const lastDone = displayDay;
 
   for (let i = 1; i <= 30; i++) {
     const div = document.createElement('div');
