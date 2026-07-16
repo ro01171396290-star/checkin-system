@@ -59,29 +59,7 @@ async function initDB() {
     try { await exec(`ALTER TABLE users ADD COLUMN ${col} INTEGER DEFAULT 0`); } catch (e) {}
   }
 
-  const result = await client.execute('SELECT COUNT(*) as cnt FROM invite_codes');
-  const count = result.rows[0].cnt;
-
-  if (count === 0) {
-    console.log('Creating 99,999 invite codes...');
-    const batchSize = 1000;
-    for (let batch = 0; batch < 100; batch++) {
-      const stmts = [];
-      for (let i = 1; i <= batchSize; i++) {
-        const idx = batch * batchSize + i;
-        if (idx > 99999) break;
-        stmts.push({
-          sql: 'INSERT INTO invite_codes (code) VALUES (?)',
-          args: ['SR-' + String(idx).padStart(5, '0')]
-        });
-      }
-      await client.batch(stmts, 'write');
-      if ((batch + 1) % 10 === 0) console.log(`  ${Math.min((batch + 1) * batchSize, 99999)} codes created...`);
-    }
-    console.log('99,999 invite codes created.');
-  } else {
-    console.log(`Database loaded: ${count} invite codes.`);
-  }
+  console.log('Turso database initialized.');
 }
 
 function authMiddleware(req, res, next) {
@@ -263,4 +241,7 @@ initDB().then(() => {
     console.log(`  DB: Turso (${TURSO_URL})`);
     console.log(`========================================\n`);
   });
+}).catch(err => {
+  console.error('FATAL: Turso init failed:', err.message);
+  process.exit(1);
 });
