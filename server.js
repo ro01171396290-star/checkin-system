@@ -231,6 +231,10 @@ initDB().then(() => {
     res.json({ success: true, message: '邀请码 ' + code + ' 已添加' });
   });
 
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', db: 'turso', time: new Date().toISOString() });
+  });
+
   app.listen(PORT, () => {
     console.log(`\n========================================`);
     console.log(`  Server: http://localhost:${PORT}`);
@@ -242,6 +246,10 @@ initDB().then(() => {
     console.log(`========================================\n`);
   });
 }).catch(err => {
-  console.error('FATAL: Turso init failed:', err.message);
+  console.error('FATAL: Turso init failed');
+  console.error('Error name:', err.name);
+  console.error('Error message:', err.message);
+  console.error('Error cause:', err.cause);
+  console.error('Error stack:', err.stack);
   process.exit(1);
 });
