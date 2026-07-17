@@ -303,7 +303,6 @@ body {
           <option value="unused">Unused</option>
           <option value="used">Used</option>
         </select>
-        <button class="btn btn-reset" onclick="cleanAutoCodes()" style="background:#2a1a1a;color:#e17055;border:1px solid #3a2a2a;" title="Delete all SR-00001 ~ SR-99999 auto-generated codes">CLEAN AUTO</button>
       </div>
       <div class="code-table-wrapper" style="max-height:400px;">
         <div class="empty-list" id="emptyInviteList">No invite codes found</div>
@@ -663,22 +662,7 @@ function filterInviteCodes() {
   renderInviteCodes(filtered);
 }
 
-async function cleanAutoCodes() {
-  if (!confirm('确定要删除所有自动生成的邀请码 (SR-00001 ~ SR-99999) 吗？\n手动添加的邀请码不会被删除。')) return;
-  try {
-    const res = await fetch(API_BASE + '/api/admin/invite-codes/clean-auto', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN }
-    });
-    const data = await res.json();
-    if (data.success) {
-      alert(data.message);
-      loadInviteCodes();
-    } else {
-      alert(data.error || 'Clean failed');
-    }
-  } catch (e) { alert('Network error'); }
-}
+
 
 // Init
 loadCodeList();
