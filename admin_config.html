@@ -6,68 +6,117 @@
 <title>Config Admin</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 24px; max-width: 640px; margin: 0 auto; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 24px; max-width: 680px; margin: 0 auto; }
 h1 { font-size: 22px; margin-bottom: 4px; color: #f0f6fc; }
 .sub { font-size: 12px; color: #484f58; margin-bottom: 24px; }
 .card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
 .card h2 { font-size: 16px; color: #58a6ff; margin-bottom: 16px; border-bottom: 1px solid #21262d; padding-bottom: 8px; }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.field input, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px; background: #0d1117; color: #c9d1d9; font-size: 14px; font-family: inherit; }
-.field input:focus, .field textarea:focus { outline: none; border-color: #58a6ff; }
+.field input, .field textarea, .field select { width: 100%; padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px; background: #0d1117; color: #c9d1d9; font-size: 14px; font-family: inherit; }
+.field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: #58a6ff; }
 .field textarea { resize: vertical; min-height: 60px; }
+.field-row { display: flex; gap: 10px; align-items: end; }
+.field-row .field { flex: 1; margin-bottom: 0; }
 .hint { font-size: 10px; color: #484f58; margin-top: 2px; }
-.actions { display: flex; gap: 12px; margin-top: 24px; }
-.btn { padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+.upload-row { display: flex; gap: 8px; align-items: end; }
+.upload-preview { width: 48px; height: 48px; border-radius: 6px; border: 1px solid #30363d; object-fit: cover; background: #0d1117; flex-shrink: 0; }
+.upload-info { font-size: 11px; color: #8b949e; word-break: break-all; line-height: 1.3; }
+.upload-info .current { color: #58a6ff; display: block; }
+.btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap; }
 .btn-primary { background: #238636; color: #fff; }
 .btn-primary:hover { background: #2ea043; }
 .btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
 .btn-secondary:hover { background: #30363d; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-danger { background: #da3633; color: #fff; }
+.btn-danger:hover { background: #f85149; }
+.actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+.toggle-field { display: flex; align-items: center; gap: 10px; }
+.toggle-field label { margin-bottom: 0; }
+.toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #30363d; border-radius: 24px; cursor: pointer; transition: 0.3s; }
+.toggle-slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #c9d1d9; border-radius: 50%; transition: 0.3s; }
+.toggle-switch input:checked + .toggle-slider { background: #238636; }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
 .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 999; display: none; }
 .toast.success { background: #238636; color: #fff; }
 .toast.error { background: #da3633; color: #fff; }
+/* Upload hidden file input */
+.file-input-wrap { position: relative; display: inline-block; }
+.file-input-wrap input[type=file] { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.show { display: flex; }
+.modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; text-align: center; }
+.modal h3 { margin-bottom: 12px; color: #f0f6fc; }
+.modal p { font-size: 13px; color: #8b949e; margin-bottom: 16px; }
+.modal img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 16px; display: none; }
+.modal .uploading { color: #58a6ff; display: none; }
 </style>
 </head>
 <body>
 
 <h1>App Configuration</h1>
-<div class="sub">Edit content without rebuilding the APK. Changes apply immediately.</div>
+<div class="sub">Edit content & upload images without rebuilding the APK. Changes apply immediately.</div>
 
 <div id="cards"></div>
 
 <div class="actions">
   <button class="btn btn-primary" onclick="saveAll()">Save All Changes</button>
   <button class="btn btn-secondary" onclick="loadSettings()">Refresh</button>
+  <button class="btn btn-secondary" style="margin-left:auto" onclick="syncToDesktop()">Sync to Desktop Package</button>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Upload Preview Modal -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <h3 id="modalTitle">Upload Image</h3>
+    <img id="modalPreview" alt="Preview">
+    <p class="uploading" id="modalUploading">Uploading...</p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="btn btn-primary" id="modalConfirm" onclick="doUpload()">Upload</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const API_BASE = 'https://checkin-system-dok2.onrender.com';
 const ADMIN_TOKEN = 'admin-token-change-me';
 let currentSettings = {};
+let pendingUpload = null;
 
 const fields = [
   { section: 'Text Content', items: [
-    { key: 'appTitle', label: 'App Title', hint: 'Top bar title shown on the rewards page' },
-    { key: 'gridTitle', label: 'Reward Range Text', hint: 'Shown above the 30-day calendar grid' },
-    { key: 'claimText', label: 'Claim Screenshot Text', hint: 'Shown below reward GIF popups' },
-    { key: 'comeBackText', label: 'Come Back Text', hint: 'Use {day} as placeholder for the next day number' },
-    { key: 'tabRewards', label: 'Tab Label: Rewards', hint: 'Bottom nav tab text' },
-    { key: 'tabSlot', label: 'Tab Label: Slot', hint: 'Bottom nav tab text' }
+    { key: 'appTitle', label: 'App Title' },
+    { key: 'gridTitle', label: 'Reward Range Text' },
+    { key: 'claimText', label: 'Claim Screenshot Text' },
+    { key: 'comeBackText', label: 'Come Back Text', hint: '{day} = next day number' },
+    { key: 'tabRewards', label: 'Tab: Rewards' },
+    { key: 'tabSlot', label: 'Tab: Slot' }
   ]},
-  { section: 'GIF Images', items: [
-    { key: 'rewardGifDay7', label: 'Day 7 Reward GIF', hint: 'URL or bundled filename (day7.gif)' },
-    { key: 'rewardGifDay14', label: 'Day 14 Reward GIF', hint: 'URL or bundled filename (day14.gif)' },
-    { key: 'rewardGifDay21', label: 'Day 21 Reward GIF', hint: 'URL or bundled filename (day21.gif)' },
-    { key: 'rewardGifDay30', label: 'Day 30 Reward GIF', hint: 'URL or bundled filename (day30.gif)' },
-    { key: 'dailyGif', label: 'Daily Check-in GIF', hint: 'Shown after normal (non-milestone) check-in' },
-    { key: 'rewardBg', label: 'Reward Background Image', hint: 'Background for rewards section (blur + brightness applied)' }
+  { section: 'Images (Upload or paste URL)', items: [
+    { key: 'rewardBg',     label: 'Reward Background', type: 'image' },
+    { key: 'rewardGifDay7',  label: 'Day 7 Reward GIF', type: 'image' },
+    { key: 'rewardGifDay14', label: 'Day 14 Reward GIF', type: 'image' },
+    { key: 'rewardGifDay21', label: 'Day 21 Reward GIF', type: 'image' },
+    { key: 'rewardGifDay30', label: 'Day 30 Reward GIF', type: 'image' },
+    { key: 'dailyGif',       label: 'Daily Check-in GIF', type: 'image' }
   ]},
   { section: 'Page URLs', items: [
-    { key: 'slotUrl', label: 'Slot Page URL', hint: 'Page loaded in the Slot tab iframe' },
-    { key: 'loginPage', label: 'Login Page', hint: 'APK login page filename' },
-    { key: 'registerPage', label: 'Register Page', hint: 'APK register page filename' }
+    { key: 'slotUrl', label: 'Slot Page URL' },
+    { key: 'loginPage', label: 'Login Page' },
+    { key: 'registerPage', label: 'Register Page' }
+  ]},
+  { section: 'Notice / Announcement', items: [
+    { key: 'noticeEnabled', label: 'Show Notice', type: 'toggle' },
+    { key: 'noticeText', label: 'Notice Text', type: 'textarea', hint: 'Shown as a banner at the top of the check-in page. Leave empty to hide.' }
+  ]},
+  { section: 'Maintenance', items: [
+    { key: 'maintenanceMode', label: 'Maintenance Mode', type: 'toggle', hint: 'When ON, the app shows a maintenance page instead of the check-in screen' }
   ]}
 ];
 
@@ -76,15 +125,114 @@ function renderCards() {
   for (const section of fields) {
     html += `<div class="card"><h2>${section.section}</h2>`;
     for (const f of section.items) {
-      html += `<div class="field">
-        <label>${f.label}</label>
-        <input id="inp_${f.key}" placeholder="${currentSettings[f.key] || ''}" value="${currentSettings[f.key] || ''}">
-        <div class="hint">${f.hint}</div>
-      </div>`;
+      const val = currentSettings[f.key] || '';
+      if (f.type === 'image') {
+        const isUrl = val && (val.startsWith('http://') || val.startsWith('https://'));
+        html += `<div class="field">
+          <label>${f.label}</label>
+          <div class="upload-row">
+            ${isUrl ? `<img class="upload-preview" src="${val}" alt="${f.label}">` : '<div class="upload-preview" style="background:#21262d;display:flex;align-items:center;justify-content:center;font-size:18px;color:#484f58">?</div>'}
+            <div style="flex:1;min-width:0;">
+              <input id="inp_${f.key}" placeholder="https://... or filename" value="${val}" style="margin-bottom:4px">
+              <div class="upload-info">${val ? (isUrl ? '<span class="current">Remote URL</span>' : '<span>Bundled: '+val+'</span>') : '<span style="color:#484f58">No image set</span>'}</div>
+            </div>
+            <span class="file-input-wrap">
+              <button class="btn btn-secondary btn-sm">Upload</button>
+              <input type="file" accept="image/*" onchange="previewUpload(this, '${f.key}', '${f.label}')">
+            </span>
+          </div>
+          ${f.hint ? `<div class="hint">${f.hint}</div>` : ''}
+        </div>`;
+      } else if (f.type === 'toggle') {
+        html += `<div class="field toggle-field">
+          <label style="margin-bottom:0">${f.label}</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="inp_${f.key}" ${val === 'true' ? 'checked' : ''} onchange="currentSettings['${f.key}'] = this.checked ? 'true' : 'false'">
+            <span class="toggle-slider"></span>
+          </label>
+          ${f.hint ? `<span class="hint" style="margin-left:10px">${f.hint}</span>` : ''}
+        </div>`;
+      } else if (f.type === 'textarea') {
+        html += `<div class="field">
+          <label>${f.label}</label>
+          <textarea id="inp_${f.key}" placeholder="Enter notice text...">${val}</textarea>
+          ${f.hint ? `<div class="hint">${f.hint}</div>` : ''}
+        </div>`;
+      } else {
+        html += `<div class="field">
+          <label>${f.label}</label>
+          <input id="inp_${f.key}" value="${val}">
+          ${f.hint ? `<div class="hint">${f.hint}</div>` : ''}
+        </div>`;
+      }
     }
     html += '</div>';
   }
   document.getElementById('cards').innerHTML = html;
+}
+
+function previewUpload(input, key, label) {
+  const file = input.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['png','jpg','jpeg','gif','webp','svg'].includes(ext)) {
+    showToast('Only image files allowed', 'error');
+    input.value = '';
+    return;
+  }
+  if (file.size > 3 * 1024 * 1024) {
+    showToast('Image too large. Max 3MB.', 'error');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result.split(',')[1];
+    pendingUpload = { key, filename: file.name, data: base64 };
+    document.getElementById('modalTitle').textContent = label;
+    document.getElementById('modalPreview').src = e.target.result;
+    document.getElementById('modalPreview').style.display = 'block';
+    document.getElementById('modalUploading').style.display = 'none';
+    document.getElementById('modalConfirm').style.display = 'inline-block';
+    document.getElementById('uploadModal').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+async function doUpload() {
+  if (!pendingUpload) return;
+  document.getElementById('modalConfirm').style.display = 'none';
+  document.getElementById('modalUploading').style.display = 'block';
+
+  try {
+    const res = await fetch(API_BASE + '/api/admin/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Token': ADMIN_TOKEN
+      },
+      body: JSON.stringify(pendingUpload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentSettings[pendingUpload.key] = data.url;
+      document.getElementById('inp_' + pendingUpload.key).value = data.url;
+      renderCards();
+      showToast('Uploaded: ' + data.url, 'success');
+    } else {
+      showToast('Upload failed: ' + (data.error || 'unknown'), 'error');
+    }
+  } catch (e) {
+    showToast('Upload error: ' + e.message, 'error');
+  }
+  closeModal();
+}
+
+function closeModal() {
+  document.getElementById('uploadModal').classList.remove('show');
+  pendingUpload = null;
 }
 
 async function loadSettings() {
@@ -107,9 +255,16 @@ async function saveAll() {
   let saved = 0, failed = 0;
   for (const section of fields) {
     for (const f of section.items) {
-      const inp = document.getElementById('inp_' + f.key);
-      if (!inp) continue;
-      const val = inp.value.trim();
+      let val;
+      if (f.type === 'toggle') {
+        // Toggle values are already updated via onchange in currentSettings
+        val = currentSettings[f.key] || 'false';
+      } else {
+        const inp = document.getElementById('inp_' + f.key);
+        if (!inp) continue;
+        val = inp.value.trim ? inp.value.trim() : inp.value;
+      }
+
       if (val !== (currentSettings[f.key] || '')) {
         try {
           const res = await fetch(API_BASE + '/api/admin/settings', {
@@ -127,9 +282,22 @@ async function saveAll() {
       }
     }
   }
+
   if (failed === 0 && saved === 0) showToast('No changes detected', 'success');
   else if (failed === 0) showToast(`${saved} setting(s) saved`, 'success');
   else showToast(`${saved} saved, ${failed} failed`, 'error');
+}
+
+async function syncToDesktop() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/settings');
+    const data = await res.json();
+    if (data.success) {
+      showToast('Sync to desktop: copy this file to CheckIn_完整项目包\\admin_config.html', 'success');
+    }
+  } catch (e) {
+    showToast('Sync failed: ' + e.message, 'error');
+  }
 }
 
 function showToast(msg, type) {

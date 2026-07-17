@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@libsql/client');
 const path = require('path');
+const fs = require('fs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'checkin-secret-key-change-me';
 const PORT = process.env.PORT || 3000;
@@ -86,7 +87,10 @@ async function initDB() {
       ['rewardBg', 'reward_bg.png'],
       ['slotUrl', 'slot.html'],
       ['loginPage', 'login_apk.html'],
-      ['registerPage', 'register_apk.html']
+      ['registerPage', 'register_apk.html'],
+      ['noticeText', ''],
+      ['noticeEnabled', 'false'],
+      ['maintenanceMode', 'false']
     ];
     for (const [k, v] of defaults) {
       await exec('INSERT INTO settings (key, value) VALUES (?, ?)', [k, v]);
@@ -110,8 +114,13 @@ function adminMiddleware(req, res, next) {
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(__dirname));
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) { fs.mkdirSync(uploadDir, { recursive: true }); }
+const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
 
 initDB().then(() => {
 
@@ -315,6 +324,53 @@ initDB().then(() => {
       await exec('INSERT INTO settings (key, value) VALUES (?, ?)', [key, value]);
     }
     res.json({ success: true, message: 'Setting updated', key, value });
+  });
+
+  // ========== Image Upload API ==========
+  app.post('/api/admin/upload', adminMiddleware, async (req, res) => {
+    const { key, filename, data } = req.body;
+    if (!key || !filename || !data) return res.status(400).json({ error: 'key, filename, and data (base64) are required' });
+
+    // Basic security: allow only image extensions
+    const ext = path.extname(filename).toLowerCase();
+    const allowed = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+    if (!allowed.includes(ext)) return res.status(400).json({ error: 'Only image files are allowed: ' + allowed.join(', ') });
+
+    // Decode base64
+    let buffer;
+    try {
+      buffer = Buffer.from(data, 'base64');
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid base64 data' });
+    }
+
+    // Max 3MB file
+    if (buffer.length > 3 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Image too large. Max 3MB.' });
+    }
+
+    // Save to public/uploads/
+    const safeName = key + '_' + Date.now() + ext;
+    const filePath = path.join(uploadDir, safeName);
+    fs.writeFileSync(filePath, buffer);
+
+    // Build public URL
+    const publicUrl = SITE_URL + '/public/uploads/' + safeName;
+
+    // Update settings with the new URL
+    const exists = await getRow('SELECT key FROM settings WHERE key = ?', [key]);
+    if (exists) {
+      await exec("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?", [publicUrl, key]);
+    } else {
+      await exec('INSERT INTO settings (key, value) VALUES (?, ?)', [key, publicUrl]);
+    }
+
+    res.json({ success: true, url: publicUrl, key });
+  });
+
+  // API: get current site_url (for admin panel to build upload URLs)
+  app.get('/api/admin/site-info', async (req, res) => {
+    res.json({ success: true, siteUrl: SITE_URL, uploadDir: '/public/uploads/' });
   });
 
   app.get('/api/health', (req, res) => {
