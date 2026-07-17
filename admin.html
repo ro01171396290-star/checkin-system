@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - CheckIn</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f0f1a; font-family: 'Segoe UI', sans-serif;
+  color: #fff; min-height: 100vh;
+  display: flex; justify-content: center; padding: 20px;
+}
+.container { width: 100%; max-width: 800px; }
+
+.header {
+  padding: 24px 0 20px;
+  border-bottom: 1px solid #1e1e32;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.header h1 {
+  font-size: 24px; font-weight: 700;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .version { font-size: 12px; color: #444; }
+
+/* ===== Tab Nav ===== */
+.tab-nav {
+  display: flex; gap: 0; margin-bottom: 20px;
+  background: #151525; border-radius: 12px;
+  padding: 4px;
+}
+.tab-btn {
+  flex: 1; padding: 10px 0; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px;
+  background: transparent; color: #666; transition: all 0.3s;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff;
+}
+
+/* ===== Panels ===== */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ===== Section ===== */
+.section {
+  background: #151525; border-radius: 16px;
+  padding: 20px; margin-bottom: 20px;
+}
+.section-title {
+  font-size: 14px; color: #888; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 16px;
+}
+.search-row {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.search-input {
+  flex: 1; min-width: 200px; padding: 12px 16px;
+  background: #1a1a2e; border: 1px solid #2a2a42;
+  border-radius: 10px; color: #fff; font-size: 15px;
+  outline: none;
+}
+.search-input:focus { border-color: #6c5ce7; }
+.search-input::placeholder { color: #444; }
+.btn {
+  padding: 12px 24px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.3s; letter-spacing: 1px;
+}
+.btn-search {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #fff;
+}
+.btn-search:hover { transform: scale(1.03); }
+
+/* ===== Result Card ===== */
+.result-card { display: none; }
+.result-card.show { display: block; }
+.result-row {
+  display: grid; grid-template-columns: 150px 1fr;
+  padding: 12px 0; border-bottom: 1px solid #1e1e32;
+  align-items: center;
+}
+.result-row:last-child { border-bottom: none; }
+.result-label { font-size: 13px; color: #666; }
+.result-value { font-size: 15px; color: #fff; font-weight: 600; }
+
+.ms-badges { display: flex; gap: 10px; margin-top: 6px; }
+.ms-badge {
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700;
+  background: #1a1a2e; color: #444;
+  border: 1px solid #2a2a42;
+}
+.ms-badge.claimed {
+  background: #1a1530; border-color: #6c5ce7; color: #a29bfe;
+}
+
+.action-btns {
+  display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+}
+.btn-reset {
+  background: #2a2a42; color: #a29bfe;
+}
+.btn-reset:hover { background: #3a3a55; }
+
+/* ===== Add Invite ===== */
+.add-row { display: flex; gap: 10px; }
+.btn-add {
+  background: linear-gradient(135deg, #00cec9, #00b894);
+  color: #fff;
+}
+.btn-add:hover { transform: scale(1.03); }
+
+/* ===== Messages ===== */
+.msg {
+  margin-top: 10px; font-size: 13px; font-weight: 600; min-height: 18px;
+}
+.msg.error { color: #e17055; }
+.msg.success { color: #00cec9; }
+
+/* ===== Code List ===== */
+.list-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.list-count {
+  font-size: 12px; color: #888;
+  background: #1a1a2e; padding: 4px 10px; border-radius: 6px;
+}
+.list-search-row {
+  display: flex; gap: 8px; width: 100%;
+}
+.list-search-row .search-input {
+  flex: 1; min-width: 150px;
+}
+.code-table-wrapper {
+  max-height: 500px; overflow-y: auto;
+  border-radius: 8px;
+}
+.code-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.code-table th {
+  text-align: left; padding: 10px 12px;
+  font-size: 11px; color: #666; text-transform: uppercase;
+  letter-spacing: 1.5px; font-weight: 600;
+  border-bottom: 1px solid #2a2a42;
+  background: #151525; position: sticky; top: 0; z-index: 1;
+}
+.code-table td {
+  padding: 12px; border-bottom: 1px solid #1e1e32; color: #fff;
+}
+.code-table tr:last-child td { border-bottom: none; }
+.code-table tr:hover td { background: #1a1a2e; }
+.code-table .col-code { font-family: 'Courier New', monospace; color: #a29bfe; font-weight: 700; }
+.code-table .col-phone { color: #ddd; }
+.code-table .col-date { color: #888; font-size: 13px; }
+.code-table .col-days { color: #00cec9; font-weight: 700; }
+.btn-row-reset {
+  background: #2a1f3a; color: #a29bfe;
+  border: 1px solid #3a2f55;
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-row-reset:hover { background: #3a2f55; border-color: #6c5ce7; }
+.btn-row-delete {
+  background: #2a1a1a; color: #e17055;
+  border: 1px solid #3a2a2a;
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-row-delete:hover { background: #3a2a2a; border-color: #e17055; }
+.empty-list {
+  text-align: center; padding: 30px; color: #555; font-size: 13px;
+}
+
+/* ===== Modal ===== */
+.modal {
+  display: none; position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+  justify-content: center; align-items: center; z-index: 100;
+}
+.modal.show { display: flex; }
+.modal-box {
+  background: #151525; border-radius: 16px; padding: 24px;
+  max-width: 400px; width: 90%;
+}
+.modal-box h3 { font-size: 18px; margin-bottom: 16px; }
+.modal-box input {
+  width: 100%; padding: 12px 16px;
+  background: #1a1a2e; border: 1px solid #2a2a42;
+  border-radius: 10px; color: #fff; font-size: 15px;
+  outline: none; margin-bottom: 12px;
+}
+.modal-box input:focus { border-color: #6c5ce7; }
+.modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.btn-cancel { background: #2a2a42; color: #888; }
+
+.not-found {
+  text-align: center; padding: 30px; color: #555; font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Admin Panel</h1>
+    <span class="version">CheckIn System | <a href="admin_config.html" style="color:#a29bfe;text-decoration:none;">Config</a> | <a href="admin_designer.html" style="color:#55efc4;text-decoration:none;font-weight:700;">Designer</a></span>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('main')">Main</button>
+    <button class="tab-btn" onclick="switchTab('addInvite')">Add Invite Code</button>
+    <button class="tab-btn" onclick="switchTab('codeList')">Phone Number / Code List</button>
+  </div>
+
+  <!-- Tab 1: Main - Search by Code or Phone -->
+  <div class="panel active" id="panel-main">
+    <!-- Search by Code -->
+    <div class="section">
+      <div class="section-title">Search User by Code</div>
+      <div class="search-row">
+        <input class="search-input" id="searchCode" placeholder="Enter invite code" onkeydown="if(event.key==='Enter')doSearchCode()">
+        <button class="btn btn-search" onclick="doSearchCode()">SEARCH</button>
+      </div>
+      <div class="msg" id="searchMsg"></div>
+    </div>
+
+    <!-- Search by Phone -->
+    <div class="section">
+      <div class="section-title">Search User by Phone Number</div>
+      <div class="search-row">
+        <input class="search-input" id="searchPhone" placeholder="+60123456789" onkeydown="if(event.key==='Enter')doSearchPhone()">
+        <button class="btn btn-search" onclick="doSearchPhone()">SEARCH</button>
+      </div>
+      <div class="msg" id="searchPhoneMsg"></div>
+    </div>
+
+    <!-- Result -->
+    <div class="section result-card" id="resultCard">
+      <div class="section-title">User Details</div>
+      <div class="result-row">
+        <span class="result-label">Invite Code</span>
+        <span class="result-value" id="rCode">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Phone</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="result-value" id="rPhone">-</span>
+          <button class="btn-row-reset" onclick="openPhoneModal()" style="padding:4px 10px;font-size:11px;">EDIT</button>
+        </div>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Total Days</span>
+        <span class="result-value" id="rDays">0</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Registered</span>
+        <span class="result-value" id="rCreated">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Milestones</span>
+        <div class="ms-badges" id="rMilestones"></div>
+      </div>
+      <div class="action-btns">
+        <button class="btn btn-reset" onclick="openResetModal()">Reset Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Add Invite Code -->
+  <div class="panel" id="panel-addInvite">
+    <div class="section">
+      <div class="section-title">Add Invite Code</div>
+      <div class="add-row">
+        <input class="search-input" id="newCode" placeholder="Enter invite code" style="letter-spacing:1px;">
+        <button class="btn btn-add" onclick="doAddInvite()">ADD</button>
+      </div>
+      <div class="msg" id="addMsg"></div>
+    </div>
+
+    <div class="section">
+      <div class="list-header">
+        <div class="section-title" style="margin-bottom:0;">Invite Code List</div>
+        <span class="list-count" id="inviteListCount">0 codes</span>
+      </div>
+      <div class="list-search-row" style="margin-bottom:12px;">
+        <input class="search-input" id="inviteSearch" placeholder="Search invite codes..." oninput="filterInviteCodes()">
+        <select id="inviteStatusFilter" onchange="filterInviteCodes()" style="background:#1a1a2e;border:1px solid #2a2a42;border-radius:10px;color:#fff;padding:12px;font-size:14px;outline:none;">
+          <option value="">All</option>
+          <option value="unused">Unused</option>
+          <option value="used">Used</option>
+        </select>
+        <button class="btn btn-reset" onclick="cleanAutoCodes()" style="background:#2a1a1a;color:#e17055;border:1px solid #3a2a2a;" title="Delete all SR-00001 ~ SR-99999 auto-generated codes">CLEAN AUTO</button>
+      </div>
+      <div class="code-table-wrapper" style="max-height:400px;">
+        <div class="empty-list" id="emptyInviteList">No invite codes found</div>
+        <table class="code-table" id="inviteTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Invite Code</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="inviteTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Phone Number / Code List -->
+  <div class="panel" id="panel-codeList">
+    <div class="section">
+      <div class="list-header">
+        <div class="section-title" style="margin-bottom:0;">Phone Number / Code List</div>
+        <span class="list-count" id="listCount">0 users</span>
+      </div>
+      <div class="list-search-row" style="margin-bottom:12px;">
+        <input class="search-input" id="listSearch" placeholder="Search by phone or code..." oninput="filterCodeList()">
+      </div>
+      <div class="code-table-wrapper">
+        <div class="empty-list" id="emptyList">No registered users yet</div>
+        <table class="code-table" id="codeTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Phone</th>
+              <th>Invite Code</th>
+              <th>Days</th>
+              <th>Registered</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="codeTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal" id="resetModal">
+  <div class="modal-box">
+    <h3>Reset Password</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:12px;">
+      For invite code: <span id="modalCode" style="color:#a29bfe;">-</span>
+    </p>
+    <input type="password" id="newPassword" placeholder="New password (min 6 chars)" autocomplete="new-password">
+    <div class="msg" id="resetMsg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeResetModal()">Cancel</button>
+      <button class="btn btn-search" onclick="doResetPassword()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Phone Modal -->
+<div class="modal" id="phoneModal">
+  <div class="modal-box">
+    <h3>Edit Phone Number</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:12px;">
+      For invite code: <span id="phoneModalCode" style="color:#a29bfe;">-</span>
+      <br>Current: <span id="phoneModalCurrent" style="color:#00cec9;">-</span>
+    </p>
+    <input type="text" id="newPhone" placeholder="+60XXXXXXXXXX" autocomplete="off">
+    <div class="msg" id="phoneMsg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closePhoneModal()">Cancel</button>
+      <button class="btn btn-search" onclick="doUpdatePhone()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const ADMIN_TOKEN = 'admin-token-change-me';
+
+let currentSearchCode = '';
+let allUsers = [];
+let allInviteCodes = [];
+
+function msgEl(id) { return document.getElementById(id); }
+
+function showMsg(elId, msg, cls) {
+  const el = msgEl(elId);
+  el.textContent = msg;
+  el.className = 'msg ' + cls;
+  setTimeout(() => { el.textContent = ''; el.className = 'msg'; }, 4000);
+}
+
+// ========== Tab Switching ==========
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'codeList') loadCodeList();
+  if (tab === 'addInvite') loadInviteCodes();
+}
+
+// ========== Search by Code ==========
+async function doSearchCode() {
+  const code = msgEl('searchCode').value.trim();
+  if (!code) { showMsg('searchMsg', 'Please enter a code', 'error'); return; }
+  currentSearchCode = code;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/search?code=' + encodeURIComponent(code), {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.found) { msgEl('resultCard').classList.remove('show'); showMsg('searchMsg', 'Code not registered yet', 'error'); return; }
+    showUserResult(data);
+    showMsg('searchMsg', '', '');
+  } catch (e) { showMsg('searchMsg', 'Network error', 'error'); }
+}
+
+// ========== Search by Phone ==========
+async function doSearchPhone() {
+  const phone = msgEl('searchPhone').value.trim();
+  if (!phone) { showMsg('searchPhoneMsg', 'Please enter a phone number', 'error'); return; }
+  try {
+    const res = await fetch(API_BASE + '/api/admin/search-phone?phone=' + encodeURIComponent(phone), {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.found) { msgEl('resultCard').classList.remove('show'); showMsg('searchPhoneMsg', 'Phone not registered yet', 'error'); return; }
+    currentSearchCode = data.inviteCode;
+    showUserResult(data);
+    showMsg('searchPhoneMsg', '', '');
+  } catch (e) { showMsg('searchPhoneMsg', 'Network error', 'error'); }
+}
+
+function showUserResult(data) {
+  msgEl('rCode').textContent = data.inviteCode;
+  msgEl('rPhone').textContent = data.phone;
+  const displayDay = data.totalDays === 0 ? 0 : ((data.totalDays - 1) % 30) + 1;
+  msgEl('rDays').textContent = displayDay;
+  msgEl('rCreated').textContent = data.createdAt ? data.createdAt.slice(0, 10) : '-';
+  const msContainer = msgEl('rMilestones');
+  msContainer.innerHTML = '';
+  [{key:'day7',label:'Day 7'},{key:'day14',label:'Day 14'},{key:'day21',label:'Day 21'},{key:'day30',label:'Day 30'}].forEach(m => {
+    const badge = document.createElement('div');
+    badge.className = 'ms-badge' + (data[m.key] ? ' claimed' : '');
+    badge.textContent = m.label + (data[m.key] ? ' ✓' : '');
+    msContainer.appendChild(badge);
+  });
+  msgEl('resultCard').classList.add('show');
+}
+
+// ========== Reset Password ==========
+function openResetModal() {
+  msgEl('modalCode').textContent = currentSearchCode;
+  msgEl('newPassword').value = '';
+  msgEl('resetMsg').textContent = '';
+  msgEl('resetModal').classList.add('show');
+}
+function closeResetModal() { msgEl('resetModal').classList.remove('show'); }
+
+async function doResetPassword() {
+  const newPassword = msgEl('newPassword').value;
+  if (!newPassword || newPassword.length < 6) {
+    showMsg('resetMsg', 'Password must be at least 6 characters', 'error'); return;
+  }
+  try {
+    const res = await fetch(API_BASE + '/api/admin/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code: currentSearchCode, newPassword })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMsg('resetMsg', 'Password reset successful!', 'success');
+      setTimeout(() => { closeResetModal(); loadCodeList(); }, 1200);
+    } else { showMsg('resetMsg', data.error || 'Failed', 'error'); }
+  } catch (e) { showMsg('resetMsg', 'Network error', 'error'); }
+}
+
+function openPhoneModal() {
+  if (!currentSearchCode) return;
+  const currentPhone = msgEl('rPhone').textContent;
+  msgEl('phoneModalCode').textContent = currentSearchCode;
+  msgEl('phoneModalCurrent').textContent = currentPhone;
+  msgEl('newPhone').value = currentPhone;
+  msgEl('phoneMsg').textContent = '';
+  msgEl('phoneMsg').className = 'msg';
+  msgEl('phoneModal').classList.add('show');
+}
+
+function closePhoneModal() { msgEl('phoneModal').classList.remove('show'); }
+
+async function doUpdatePhone() {
+  const newPhone = msgEl('newPhone').value.trim();
+  if (!newPhone) { showMsg('phoneMsg', 'Phone number is required', 'error'); return; }
+  if (!/^\+60\d{9,10}$/.test(newPhone)) {
+    showMsg('phoneMsg', 'Invalid format. Use +60XXXXXXXXXX', 'error'); return;
+  }
+  try {
+    const res = await fetch(API_BASE + '/api/admin/update-phone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code: currentSearchCode, newPhone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMsg('phoneMsg', 'Phone updated successfully!', 'success');
+      msgEl('rPhone').textContent = data.newPhone;
+      setTimeout(() => { closePhoneModal(); loadCodeList(); }, 1200);
+    } else { showMsg('phoneMsg', data.error || 'Failed', 'error'); }
+  } catch (e) { showMsg('phoneMsg', 'Network error', 'error'); }
+}
+
+// ========== Add Invite ==========
+async function doAddInvite() {
+  const code = msgEl('newCode').value.trim().toUpperCase();
+  if (!code) { showMsg('addMsg', 'Please enter an invite code', 'error'); return; }
+  try {
+    const res = await fetch(API_BASE + '/api/admin/add-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (data.success) { showMsg('addMsg', data.message, 'success'); msgEl('newCode').value = ''; loadInviteCodes(); }
+    else { showMsg('addMsg', data.error || 'Failed', 'error'); }
+  } catch (e) { showMsg('addMsg', 'Network error', 'error'); }
+}
+
+// ========== Code List ==========
+async function loadCodeList() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/users', {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    allUsers = data.users;
+    renderCodeList(allUsers);
+  } catch (e) { console.error('loadCodeList:', e); }
+}
+
+function renderCodeList(users) {
+  msgEl('listCount').textContent = users.length + ' users';
+  const tbody = msgEl('codeTableBody');
+  if (users.length === 0) {
+    msgEl('emptyList').style.display = 'block';
+    msgEl('codeTable').style.display = 'none';
+    return;
+  }
+  msgEl('emptyList').style.display = 'none';
+  msgEl('codeTable').style.display = 'table';
+  tbody.innerHTML = '';
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="col-phone">' + escapeHtml(u.phone) + '</td>' +
+      '<td class="col-code">' + escapeHtml(u.invite_code) + '</td>' +
+      '<td class="col-days">' + (u.total_days === 0 ? 0 : ((u.total_days - 1) % 30) + 1) + '</td>' +
+      '<td class="col-date">' + (u.created_at ? u.created_at.slice(0, 10) : '-') + '</td>' +
+      '<td><button class="btn-row-reset" onclick="openResetByCode(\'' + escapeHtml(u.invite_code) + '\')">Reset Pass</button>' +
+      ' <button class="btn-row-delete" onclick="deleteUser(\'' + escapeHtml(u.invite_code) + '\')">Delete</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function filterCodeList() {
+  const q = msgEl('listSearch').value.trim().toLowerCase();
+  if (!q) { renderCodeList(allUsers); return; }
+  const filtered = allUsers.filter(u =>
+    u.phone.toLowerCase().includes(q) ||
+    u.invite_code.toLowerCase().includes(q)
+  );
+  renderCodeList(filtered);
+}
+
+function openResetByCode(code) {
+  currentSearchCode = code;
+  msgEl('modalCode').textContent = code;
+  msgEl('newPassword').value = '';
+  msgEl('resetMsg').textContent = '';
+  msgEl('resetModal').classList.add('show');
+}
+
+async function deleteUser(code) {
+  if (!confirm('确定要删除 ' + code + ' 吗？删除后该号码和邀请码可重新注册。')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (data.success) {
+      loadCodeList();
+    } else {
+      alert(data.error || 'Delete failed');
+    }
+  } catch (e) { alert('Network error'); }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+// ========== Invite Code Management ==========
+async function loadInviteCodes() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/invite-codes', {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    allInviteCodes = data.codes;
+    renderInviteCodes(allInviteCodes);
+  } catch (e) { console.error('loadInviteCodes:', e); }
+}
+
+function renderInviteCodes(codes) {
+  msgEl('inviteListCount').textContent = codes.length + ' codes';
+  const tbody = msgEl('inviteTableBody');
+  if (codes.length === 0) {
+    msgEl('emptyInviteList').style.display = 'block';
+    msgEl('inviteTable').style.display = 'none';
+    return;
+  }
+  msgEl('emptyInviteList').style.display = 'none';
+  msgEl('inviteTable').style.display = 'table';
+  tbody.innerHTML = '';
+  codes.forEach(c => {
+    const tr = document.createElement('tr');
+    const statusColor = c.status === 'used' ? '#e17055' : '#00cec9';
+    const sourceLabel = c.source === 'auto' ? 'Auto' : 'Manual';
+    const sourceColor = c.source === 'auto' ? '#888' : '#a29bfe';
+    tr.innerHTML =
+      '<td class="col-code">' + escapeHtml(c.code) + '</td>' +
+      '<td style="color:' + statusColor + ';font-weight:700;">' + c.status + '</td>' +
+      '<td style="color:' + sourceColor + ';font-size:12px;">' + sourceLabel + '</td>' +
+      '<td class="col-date">' + (c.created_at ? c.created_at.slice(0, 10) : '-') + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function filterInviteCodes() {
+  const q = msgEl('inviteSearch').value.trim().toLowerCase();
+  const status = msgEl('inviteStatusFilter').value;
+  let filtered = allInviteCodes;
+  if (q) {
+    filtered = filtered.filter(c => c.code.toLowerCase().includes(q));
+  }
+  if (status) {
+    filtered = filtered.filter(c => c.status === status);
+  }
+  renderInviteCodes(filtered);
+}
+
+async function cleanAutoCodes() {
+  if (!confirm('确定要删除所有自动生成的邀请码 (SR-00001 ~ SR-99999) 吗？\n手动添加的邀请码不会被删除。')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/invite-codes/clean-auto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      loadInviteCodes();
+    } else {
+      alert(data.error || 'Clean failed');
+    }
+  } catch (e) { alert('Network error'); }
+}
+
+// Init
+loadCodeList();
+</script>
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CheckIn Designer</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #6c5ce7;
+  --accent-hover: #7c6cf7;
+  --danger: #e5534b;
+  --success: #3fb950;
+  --input-bg: #0d1117;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  height: 100vh; overflow: hidden;
+}
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 10px 20px; background: var(--panel);
+  border-bottom: 1px solid var(--border); height: 50px;
+}
+.header h1 { font-size: 16px; font-weight: 600; color: #e6edf3; }
+.header-right { display:flex; gap:10px; }
+.btn {
+  padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--text); cursor: pointer;
+  font-size: 13px; font-weight: 500; transition: all 0.15s;
+}
+.btn:hover { border-color: #555; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn-success { background: var(--success); border-color: var(--success); color: #000; }
+
+.layout { display:flex; height: calc(100vh - 50px); }
+.sidebar { width: 440px; background: var(--panel); border-right: 1px solid var(--border); display:flex; flex-direction:column; }
+.tabs { display:flex; border-bottom: 1px solid var(--border); padding: 0 8px; }
+.tab {
+  padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--text-muted);
+  border-bottom: 2px solid transparent; margin-bottom:-1px; transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.panel-content { flex:1; overflow-y:auto; padding: 16px; }
+.panel { display:none; }
+.panel.active { display:block; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display:block; font-size: 12px; color: var(--text-muted);
+  margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing:0.5px;
+}
+.form-group .hint { font-size: 10px; color: #555; margin-top:2px; }
+input[type="text"], input[type="url"], textarea, select {
+  width:100%; padding: 7px 10px; background: var(--input-bg);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 13px; font-family: inherit;
+}
+input:focus, textarea:focus, select:focus { outline:none; border-color: var(--accent); }
+textarea { resize:vertical; min-height:50px; }
+input[type="color"] {
+  height: 32px; width: 50px; padding: 2px; border:1px solid var(--border);
+  border-radius:4px; cursor:pointer; background: var(--input-bg);
+}
+.color-row { display:flex; align-items:center; gap:8px; }
+.color-row input[type="text"] { flex:1; font-family: monospace; font-size:12px; }
+input[type="range"] { flex:1; accent-color: var(--accent); }
+.range-row { display:flex; align-items:center; gap:8px; }
+.range-row span { font-size:12px; color:var(--text-muted); min-width:36px; text-align:right; }
+
+.switch-row { display:flex; align-items:center; justify-content:space-between; }
+.switch {
+  position:relative; width:40px; height:22px;
+}
+.switch input { opacity:0; width:0; height:0; }
+.slider {
+  position:absolute; top:0;left:0;right:0;bottom:0;
+  background:#30363d; border-radius:11px; cursor:pointer; transition:0.2s;
+}
+.slider:before {
+  content:''; position:absolute; height:16px; width:16px;
+  left:3px; bottom:3px; background:#8b949e; border-radius:50%; transition:0.2s;
+}
+input:checked + .slider { background: var(--accent); }
+input:checked + .slider:before { transform:translateX(18px); background:#fff; }
+
+.preview-panel {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  background: #000; overflow:auto;
+}
+.preview-frame {
+  width:390px; height:780px;
+  border:none; background: #0f0f1a;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.preview-frame.hidden { display:none; }
+
+.status-bar {
+  padding: 8px 16px; background: var(--panel); border-top:1px solid var(--border);
+  font-size:12px; color: var(--text-muted); display:flex; gap:16px;
+}
+.status-bar .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
+.status-bar .dot.green { background: var(--success); }
+.status-bar .dot.red { background: var(--danger); }
+.status-bar .dot.yellow { background: #d29922; }
+
+.toast {
+  position:fixed; bottom:20px; right:20px;
+  padding:10px 20px; border-radius:8px; font-size:13px;
+  z-index:999; opacity:0; transform:translateY(10px);
+  transition: all 0.3s; pointer-events:none;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.success { background:#1a3a2a; color:#3fb950; border:1px solid #2ea043; }
+.toast.error { background:#3a1a1a; color:#e5534b; border:1px solid #d73a49; }
+.toast.info { background:#1a2a3a; color:#58a6ff; border:1px solid #1f6feb; }
+
+.theme-preset { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.theme-preset .preset-btn {
+  width:28px; height:28px; border-radius:50%; border:2px solid transparent;
+  cursor:pointer; transition: all 0.15s;
+}
+.theme-preset .preset-btn:hover { transform:scale(1.15); }
+.theme-preset .preset-btn.active { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>CheckIn Designer</h1>
+  <div class="header-right">
+    <button class="btn btn-success" onclick="saveAll()">Save All Settings</button>
+    <button class="btn" onclick="refreshPreview()">Refresh Preview</button>
+    <button class="btn btn-primary" onclick="generateApk()">Generate APK</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="tabs">
+      <div class="tab active" data-panel="theme">Theme</div>
+      <div class="tab" data-panel="text">Text</div>
+      <div class="tab" data-panel="media">Media</div>
+      <div class="tab" data-panel="pages">Pages</div>
+      <div class="tab" data-panel="features">Features</div>
+    </div>
+    <div class="panel-content">
+      <!-- THEME PANEL -->
+      <div class="panel active" id="panel-theme">
+        <div class="form-group">
+          <label>Presets</label>
+          <div class="theme-preset" id="themePresets">
+            <button class="preset-btn active" style="background:#6c5ce7" data-theme="default" title="Default Purple"></button>
+            <button class="preset-btn" style="background:#e84393" data-theme="pink" title="Pink"></button>
+            <button class="preset-btn" style="background:#00b894" data-theme="green" title="Green"></button>
+            <button class="preset-btn" style="background:#0984e3" data-theme="blue" title="Blue"></button>
+            <button class="preset-btn" style="background:#fdcb6e" data-theme="golden" title="Golden"></button>
+            <button class="preset-btn" style="background:#e17055" data-theme="sunset" title="Sunset"></button>
+            <button class="preset-btn" style="background:#2d3436" data-theme="dark" title="Dark"></button>
+            <button class="preset-btn" style="background:#fff" data-theme="light" title="Light"></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Primary Color</label>
+          <div class="color-row">
+            <input type="color" id="themePrimary" value="#6c5ce7" onchange="onColorChange(this,'themePrimary')">
+            <input type="text" id="themePrimary_txt" value="#6c5ce7" onchange="onTxtChange(this,'themePrimary')">
+          </div>
+          <div class="hint">Buttons, progress bar, highlights</div>
+        </div>
+        <div class="form-group">
+          <label>Primary Light</label>
+          <div class="color-row">
+            <input type="color" id="themePrimaryLight" value="#a29bfe" onchange="onColorChange(this,'themePrimaryLight')">
+            <input type="text" id="themePrimaryLight_txt" value="#a29bfe" onchange="onTxtChange(this,'themePrimaryLight')">
+          </div>
+          <div class="hint">Gradient ends, nav active, hover states</div>
+        </div>
+        <div class="form-group">
+          <label>Primary Dark</label>
+          <div class="color-row">
+            <input type="color" id="themePrimaryDark" value="#5a4bd1" onchange="onColorChange(this,'themePrimaryDark')">
+            <input type="text" id="themePrimaryDark_txt" value="#5a4bd1" onchange="onTxtChange(this,'themePrimaryDark')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phone Background</label>
+          <div class="color-row">
+            <input type="color" id="themeBgPhone" value="#0f0f1a" onchange="onColorChange(this,'themeBgPhone')">
+            <input type="text" id="themeBgPhone_txt" value="#0f0f1a" onchange="onTxtChange(this,'themeBgPhone')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Card Background</label>
+          <div class="color-row">
+            <input type="color" id="themeBgCard" value="#151525" onchange="onColorChange(this,'themeBgCard')">
+            <input type="text" id="themeBgCard_txt" value="#151525" onchange="onTxtChange(this,'themeBgCard')">
+          </div>
+          <div class="hint">Grid section, milestone cards</div>
+        </div>
+        <div class="form-group">
+          <label>Nav / Dark Area Background</label>
+          <div class="color-row">
+            <input type="color" id="themeBgNav" value="#1a1a2e" onchange="onColorChange(this,'themeBgNav')">
+            <input type="text" id="themeBgNav_txt" value="#1a1a2e" onchange="onTxtChange(this,'themeBgNav')">
+          </div>
+          <div class="hint">Bottom nav, pending grid cells</div>
+        </div>
+        <div class="form-group">
+          <label>Deep Dark Background</label>
+          <div class="color-row">
+            <input type="color" id="themeBgDark" value="#1e1e32" onchange="onColorChange(this,'themeBgDark')">
+            <input type="text" id="themeBgDark_txt" value="#1e1e32" onchange="onTxtChange(this,'themeBgDark')">
+          </div>
+          <div class="hint">Progress bar bg, checked-done bg, legend dots</div>
+        </div>
+        <div class="form-group">
+          <label>Gold / Accent</label>
+          <div class="color-row">
+            <input type="color" id="themeGold" value="#f9ca24" onchange="onColorChange(this,'themeGold')">
+            <input type="text" id="themeGold_txt" value="#f9ca24" onchange="onTxtChange(this,'themeGold')">
+          </div>
+          <div class="hint">Milestone borders, claim text, notice banner</div>
+        </div>
+        <div class="form-group">
+          <label>Success Color</label>
+          <div class="color-row">
+            <input type="color" id="themeSuccess" value="#00cec9" onchange="onColorChange(this,'themeSuccess')">
+            <input type="text" id="themeSuccess_txt" value="#00cec9" onchange="onTxtChange(this,'themeSuccess')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phone Border Radius</label>
+          <div class="range-row">
+            <input type="range" id="themeRadius" min="0" max="60" value="36" oninput="onRangeChange(this,'themeRadius')">
+            <span id="themeRadius_val">36px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEXT PANEL -->
+      <div class="panel" id="panel-text">
+        <div class="form-group">
+          <label>App Title</label>
+          <input type="text" id="appTitle" value="CheckIn">
+        </div>
+        <div class="form-group">
+          <label>Grid Section Title</label>
+          <input type="text" id="gridTitle" value="Daily Random RM8 ~ RM388">
+        </div>
+        <div class="form-group">
+          <label>Claim Text</label>
+          <input type="text" id="claimText" value="Pls Screenshot To Claim">
+          <div class="hint">Shown on daily/reward popup</div>
+        </div>
+        <div class="form-group">
+          <label>Come Back Text</label>
+          <input type="text" id="comeBackText" value="Come back tomorrow for Day {day}!">
+          <div class="hint">Use {day} as placeholder for next day number</div>
+        </div>
+        <div class="form-group">
+          <label>Tab Label - Rewards</label>
+          <input type="text" id="tabRewards" value="Rewards">
+        </div>
+        <div class="form-group">
+          <label>Tab Label - Slot</label>
+          <input type="text" id="tabSlot" value="Slot Win Rate">
+        </div>
+        <div class="form-group">
+          <label>Login Page</label>
+          <input type="text" id="loginPage" value="login_apk.html">
+        </div>
+        <div class="form-group">
+          <label>Register Page</label>
+          <input type="text" id="registerPage" value="register_apk.html">
+        </div>
+      </div>
+
+      <!-- MEDIA PANEL -->
+      <div class="panel" id="panel-media">
+        <div class="form-group">
+          <label>Phone Background Image (URL)</label>
+          <input type="url" id="rewardBg" placeholder="https://... or reward_bg.png">
+          <div class="hint">Full URL or relative path to image file</div>
+        </div>
+        <div class="form-group">
+          <label>Daily Reward GIF</label>
+          <input type="url" id="dailyGif" value="daily.gif">
+        </div>
+        <div class="form-group">
+          <label>Day 7 Reward GIF</label>
+          <input type="url" id="rewardGifDay7" value="day7.gif">
+        </div>
+        <div class="form-group">
+          <label>Day 14 Reward GIF</label>
+          <input type="url" id="rewardGifDay14" value="day14.gif">
+        </div>
+        <div class="form-group">
+          <label>Day 21 Reward GIF</label>
+          <input type="url" id="rewardGifDay21" value="day21.gif">
+        </div>
+        <div class="form-group">
+          <label>Day 30 Reward GIF</label>
+          <input type="url" id="rewardGifDay30" value="day30.gif">
+        </div>
+        <div class="form-group">
+          <label>Slot Page URL</label>
+          <input type="url" id="slotUrl" value="slot.html">
+        </div>
+      </div>
+
+      <!-- PAGES PANEL -->
+      <div class="panel" id="panel-pages">
+        <div class="form-group">
+          <label>Login Page URL</label>
+          <input type="url" id="loginPage2" value="login_apk.html" onchange="syncField('loginPage2','loginPage')">
+        </div>
+        <div class="form-group">
+          <label>Register Page URL</label>
+          <input type="url" id="registerPage2" value="register_apk.html" onchange="syncField('registerPage2','registerPage')">
+        </div>
+        <div class="form-group">
+          <label>Slot Page URL</label>
+          <input type="url" id="slotUrl2" value="slot.html" onchange="syncField('slotUrl2','slotUrl')">
+        </div>
+        <div class="form-group">
+          <label>API Base URL</label>
+          <input type="url" id="apiBaseUrl" value="https://checkin-system-dok2.onrender.com" disabled>
+          <div class="hint">Hardcoded in app. Change requires rebuilding APK.</div>
+        </div>
+      </div>
+
+      <!-- FEATURES PANEL -->
+      <div class="panel" id="panel-features">
+        <div class="form-group">
+          <div class="switch-row">
+            <label>Notice Banner</label>
+            <label class="switch">
+              <input type="checkbox" id="noticeEnabled" onchange="onToggleChange(this)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notice Text</label>
+          <input type="text" id="noticeText" placeholder="e.g. New rewards available!">
+        </div>
+        <div class="form-group">
+          <div class="switch-row">
+            <label>Maintenance Mode</label>
+            <label class="switch">
+              <input type="checkbox" id="maintenanceMode" onchange="onToggleChange(this)">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="hint">Shows "Under Maintenance" overlay on checkin page</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <iframe class="preview-frame" id="previewFrame" src=""></iframe>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span><span class="dot green" id="statusDot"></span> <span id="statusText">Ready</span></span>
+  <span id="lastSaved"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
+const ADMIN_TOKEN = 'admin-token-change-me';
+
+let allSettings = {};
+
+// Theme preset definitions
+const PRESETS = {
+  default: {
+    themePrimary:'#6c5ce7',themePrimaryLight:'#a29bfe',themePrimaryDark:'#5a4bd1',
+    themeBgPhone:'#0f0f1a',themeBgCard:'#151525',themeBgNav:'#1a1a2e',
+    themeBgDark:'#1e1e32',themeGold:'#f9ca24',themeSuccess:'#00cec9',themeRadius:'36'
+  },
+  pink: {
+    themePrimary:'#e84393',themePrimaryLight:'#fd79a8',themePrimaryDark:'#d63384',
+    themeBgPhone:'#1a0f15',themeBgCard:'#251520',themeBgNav:'#2e1a25',
+    themeBgDark:'#321e28',themeGold:'#fdcb6e',themeSuccess:'#00cec9',themeRadius:'36'
+  },
+  green: {
+    themePrimary:'#00b894',themePrimaryLight:'#55efc4',themePrimaryDark:'#00a381',
+    themeBgPhone:'#0f1a15',themeBgCard:'#152520',themeBgNav:'#1a2e25',
+    themeBgDark:'#1e3228',themeGold:'#ffeaa7',themeSuccess:'#00cec9',themeRadius:'36'
+  },
+  blue: {
+    themePrimary:'#0984e3',themePrimaryLight:'#74b9ff',themePrimaryDark:'#0761b6',
+    themeBgPhone:'#0f151a',themeBgCard:'#152025',themeBgNav:'#1a252e',
+    themeBgDark:'#1e2832',themeGold:'#ffeaa7',themeSuccess:'#55efc4',themeRadius:'36'
+  },
+  golden: {
+    themePrimary:'#fdcb6e',themePrimaryLight:'#ffeaa7',themePrimaryDark:'#e17055',
+    themeBgPhone:'#1a1510',themeBgCard:'#252015',themeBgNav:'#2e251a',
+    themeBgDark:'#32281e',themeGold:'#fdcb6e',themeSuccess:'#55efc4',themeRadius:'36'
+  },
+  sunset: {
+    themePrimary:'#e17055',themePrimaryLight:'#fab1a0',themePrimaryDark:'#d63031',
+    themeBgPhone:'#1a1010',themeBgCard:'#251518',themeBgNav:'#2e1a1f',
+    themeBgDark:'#321e24',themeGold:'#ffeaa7',themeSuccess:'#55efc4',themeRadius:'36'
+  },
+  dark: {
+    themePrimary:'#636e72',themePrimaryLight:'#b2bec3',themePrimaryDark:'#2d3436',
+    themeBgPhone:'#000000',themeBgCard:'#111111',themeBgNav:'#1a1a1a',
+    themeBgDark:'#222222',themeGold:'#dfe6e9',themeSuccess:'#00b894',themeRadius:'36'
+  },
+  light: {
+    themePrimary:'#6c5ce7',themePrimaryLight:'#a29bfe',themePrimaryDark:'#5a4bd1',
+    themeBgPhone:'#f5f6fa',themeBgCard:'#ffffff',themeBgNav:'#f0f0f5',
+    themeBgDark:'#e0e0e8',themeGold:'#e17055',themeSuccess:'#00b894',themeRadius:'36'
+  }
+};
+
+function setStatus(msg, type) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'dot ' + (type || 'green');
+  txt.textContent = msg;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// Color picker sync
+function onColorChange(picker, id) {
+  document.getElementById(id + '_txt').value = picker.value;
+  allSettings[id] = picker.value;
+  liveInjectTheme();
+}
+
+function onTxtChange(input, id) {
+  const val = input.value;
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById(id).value = val;
+    allSettings[id] = val;
+    liveInjectTheme();
+  }
+}
+
+function onRangeChange(range, id) {
+  document.getElementById(id + '_val').textContent = range.value + 'px';
+  allSettings[id] = range.value;
+  liveInjectTheme();
+}
+
+function onToggleChange(cb) {
+  allSettings[cb.id] = cb.checked ? 'true' : 'false';
+}
+
+// Sync duplicate fields
+function syncField(src, target) {
+  const srcEl = document.getElementById(src);
+  const tgtEl = document.getElementById(target);
+  if (tgtEl) tgtEl.value = srcEl.value;
+  allSettings[target] = srcEl.value;
+}
+
+// Collect all form values into allSettings
+function collectAllSettings() {
+  // Theme
+  ['themePrimary','themePrimaryLight','themePrimaryDark','themeBgPhone','themeBgCard',
+   'themeBgNav','themeBgDark','themeGold','themeSuccess','themeRadius'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) allSettings[k] = el.type === 'range' ? el.value : el.value;
+  });
+  // Text
+  ['appTitle','gridTitle','claimText','comeBackText','tabRewards','tabSlot',
+   'loginPage','registerPage'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) allSettings[k] = el.value;
+  });
+  // Media
+  ['rewardBg','dailyGif','rewardGifDay7','rewardGifDay14','rewardGifDay21',
+   'rewardGifDay30','slotUrl'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) allSettings[k] = el.value;
+  });
+  // Features
+  ['noticeText'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) allSettings[k] = el.value;
+  });
+  ['noticeEnabled','maintenanceMode'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) allSettings[k] = el.checked ? 'true' : 'false';
+  });
+}
+
+// Live preview: inject CSS variables into iframe
+function liveInjectTheme() {
+  const iframe = document.getElementById('previewFrame');
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    if (!doc) return;
+    const r = doc.documentElement;
+    const s = allSettings;
+    if (s.themePrimary) r.style.setProperty('--primary', s.themePrimary);
+    if (s.themePrimaryLight) r.style.setProperty('--primary-light', s.themePrimaryLight);
+    if (s.themePrimaryDark) r.style.setProperty('--primary-dark', s.themePrimaryDark);
+    if (s.themeBgPhone) r.style.setProperty('--bg-phone', s.themeBgPhone);
+    if (s.themeBgCard) r.style.setProperty('--bg-card', s.themeBgCard);
+    if (s.themeBgNav) r.style.setProperty('--bg-nav', s.themeBgNav);
+    if (s.themeBgDark) r.style.setProperty('--bg-dark', s.themeBgDark);
+    if (s.themeGold) r.style.setProperty('--gold', s.themeGold);
+    if (s.themeSuccess) r.style.setProperty('--success', s.themeSuccess);
+    if (s.themeRadius) r.style.setProperty('--phone-radius', s.themeRadius + 'px');
+  } catch(e) {}
+}
+
+// Load current settings from server
+async function loadSettings() {
+  setStatus('Loading settings...', 'yellow');
+  try {
+    const res = await fetch(API_BASE + '/api/settings');
+    const data = await res.json();
+    if (data.success && data.settings) {
+      allSettings = {...data.settings};
+      populateForm(allSettings);
+      setStatus('Settings loaded', 'green');
+    }
+    // Load preview
+    document.getElementById('previewFrame').src = API_BASE + '/checkin_normal_final.html';
+  } catch(e) {
+    setStatus('Failed to load settings', 'red');
+    console.error(e);
+  }
+}
+
+function populateForm(s) {
+  const setters = {
+    themePrimary: s.themePrimary, themePrimaryLight: s.themePrimaryLight,
+    themePrimaryDark: s.themePrimaryDark, themeBgPhone: s.themeBgPhone,
+    themeBgCard: s.themeBgCard, themeBgNav: s.themeBgNav,
+    themeBgDark: s.themeBgDark, themeGold: s.themeGold,
+    themeSuccess: s.themeSuccess, themeRadius: s.themeRadius,
+    appTitle: s.appTitle, gridTitle: s.gridTitle, claimText: s.claimText,
+    comeBackText: s.comeBackText, tabRewards: s.tabRewards, tabSlot: s.tabSlot,
+    loginPage: s.loginPage, registerPage: s.registerPage,
+    rewardBg: s.rewardBg, dailyGif: s.dailyGif,
+    rewardGifDay7: s.rewardGifDay7, rewardGifDay14: s.rewardGifDay14,
+    rewardGifDay21: s.rewardGifDay21, rewardGifDay30: s.rewardGifDay30,
+    slotUrl: s.slotUrl, noticeText: s.noticeText
+  };
+  for (const [k, v] of Object.entries(setters)) {
+    const el = document.getElementById(k);
+    if (!el) continue;
+    if (k === 'noticeEnabled') { el.checked = v === 'true'; }
+    else if (k === 'maintenanceMode') { el.checked = v === 'true'; }
+    else if (el.type === 'color') { el.value = v || '#000000'; }
+    else if (el.type === 'range') { el.value = v || '36'; }
+    else { el.value = v || ''; }
+    // Sync text fields for colors
+    const txtEl = document.getElementById(k + '_txt');
+    if (txtEl) txtEl.value = v || '';
+  }
+  // Toggles
+  document.getElementById('noticeEnabled').checked = s.noticeEnabled === 'true';
+  document.getElementById('maintenanceMode').checked = s.maintenanceMode === 'true';
+  // Sync duplicate pages fields
+  document.getElementById('loginPage2').value = s.loginPage || '';
+  document.getElementById('registerPage2').value = s.registerPage || '';
+  document.getElementById('slotUrl2').value = s.slotUrl || '';
+  // Range val display
+  document.getElementById('themeRadius_val').textContent = (s.themeRadius || '36') + 'px';
+}
+
+// Theme presets
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const name = btn.dataset.theme;
+    const preset = PRESETS[name];
+    if (!preset) return;
+    Object.assign(allSettings, preset);
+    populateForm(allSettings);
+    liveInjectTheme();
+  });
+});
+
+// Save all settings
+async function saveAll() {
+  collectAllSettings();
+  setStatus('Saving...', 'yellow');
+  try {
+    const res = await fetch(API_BASE + '/api/admin/settings-batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Token': ADMIN_TOKEN
+      },
+      body: JSON.stringify({ settings: allSettings })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setStatus('Saved ' + data.count + ' settings', 'green');
+      showToast('Settings saved successfully', 'success');
+      document.getElementById('lastSaved').textContent = 'Last saved: ' + new Date().toLocaleString();
+      refreshPreview();
+    } else {
+      throw new Error(data.error);
+    }
+  } catch(e) {
+    setStatus('Save failed', 'red');
+    showToast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function refreshPreview() {
+  const iframe = document.getElementById('previewFrame');
+  iframe.src = API_BASE + '/checkin_normal_final.html?t=' + Date.now();
+}
+
+// Generate APK
+async function generateApk() {
+  collectAllSettings();
+  showToast('Starting APK generation...', 'info');
+  setStatus('Building APK...', 'yellow');
+  try {
+    const res = await fetch(API_BASE + '/api/admin/settings-batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Token': ADMIN_TOKEN
+      },
+      body: JSON.stringify({ settings: allSettings })
+    });
+    await res.json();
+  } catch(e) {
+    console.error('Save before build failed:', e);
+  }
+  showToast('Config saved. Use Marvis to build the APK locally, or download the package below.', 'info');
+  setStatus('Ready - trigger local build', 'green');
+}
+
+// Iframe load listener for live injection
+document.getElementById('previewFrame').addEventListener('load', function() {
+  setTimeout(liveInjectTheme, 500);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    saveAll();
+  }
+});
+
+// Init
+loadSettings();
+</script>
+</body>
+</html>
