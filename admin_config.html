@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Config Admin</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 24px; max-width: 640px; margin: 0 auto; }
+h1 { font-size: 22px; margin-bottom: 4px; color: #f0f6fc; }
+.sub { font-size: 12px; color: #484f58; margin-bottom: 24px; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+.card h2 { font-size: 16px; color: #58a6ff; margin-bottom: 16px; border-bottom: 1px solid #21262d; padding-bottom: 8px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: #8b949e; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px; background: #0d1117; color: #c9d1d9; font-size: 14px; font-family: inherit; }
+.field input:focus, .field textarea:focus { outline: none; border-color: #58a6ff; }
+.field textarea { resize: vertical; min-height: 60px; }
+.hint { font-size: 10px; color: #484f58; margin-top: 2px; }
+.actions { display: flex; gap: 12px; margin-top: 24px; }
+.btn { padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+.btn-primary { background: #238636; color: #fff; }
+.btn-primary:hover { background: #2ea043; }
+.btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+.btn-secondary:hover { background: #30363d; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 999; display: none; }
+.toast.success { background: #238636; color: #fff; }
+.toast.error { background: #da3633; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>App Configuration</h1>
+<div class="sub">Edit content without rebuilding the APK. Changes apply immediately.</div>
+
+<div id="cards"></div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="saveAll()">Save All Changes</button>
+  <button class="btn btn-secondary" onclick="loadSettings()">Refresh</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
+const ADMIN_TOKEN = 'admin-token-change-me';
+let currentSettings = {};
+
+const fields = [
+  { section: 'Text Content', items: [
+    { key: 'appTitle', label: 'App Title', hint: 'Top bar title shown on the rewards page' },
+    { key: 'gridTitle', label: 'Reward Range Text', hint: 'Shown above the 30-day calendar grid' },
+    { key: 'claimText', label: 'Claim Screenshot Text', hint: 'Shown below reward GIF popups' },
+    { key: 'comeBackText', label: 'Come Back Text', hint: 'Use {day} as placeholder for the next day number' },
+    { key: 'tabRewards', label: 'Tab Label: Rewards', hint: 'Bottom nav tab text' },
+    { key: 'tabSlot', label: 'Tab Label: Slot', hint: 'Bottom nav tab text' }
+  ]},
+  { section: 'GIF Images', items: [
+    { key: 'rewardGifDay7', label: 'Day 7 Reward GIF', hint: 'URL or bundled filename (day7.gif)' },
+    { key: 'rewardGifDay14', label: 'Day 14 Reward GIF', hint: 'URL or bundled filename (day14.gif)' },
+    { key: 'rewardGifDay21', label: 'Day 21 Reward GIF', hint: 'URL or bundled filename (day21.gif)' },
+    { key: 'rewardGifDay30', label: 'Day 30 Reward GIF', hint: 'URL or bundled filename (day30.gif)' },
+    { key: 'dailyGif', label: 'Daily Check-in GIF', hint: 'Shown after normal (non-milestone) check-in' }
+  ]},
+  { section: 'Page URLs', items: [
+    { key: 'slotUrl', label: 'Slot Page URL', hint: 'Page loaded in the Slot tab iframe' },
+    { key: 'loginPage', label: 'Login Page', hint: 'APK login page filename' },
+    { key: 'registerPage', label: 'Register Page', hint: 'APK register page filename' }
+  ]}
+];
+
+function renderCards() {
+  let html = '';
+  for (const section of fields) {
+    html += `<div class="card"><h2>${section.section}</h2>`;
+    for (const f of section.items) {
+      html += `<div class="field">
+        <label>${f.label}</label>
+        <input id="inp_${f.key}" placeholder="${currentSettings[f.key] || ''}" value="${currentSettings[f.key] || ''}">
+        <div class="hint">${f.hint}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  document.getElementById('cards').innerHTML = html;
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/settings');
+    const data = await res.json();
+    if (data.success) {
+      for (const row of data.settings) {
+        currentSettings[row.key] = row.value;
+      }
+      renderCards();
+      showToast('Settings loaded', 'success');
+    }
+  } catch (e) {
+    showToast('Failed to load: ' + e.message, 'error');
+  }
+}
+
+async function saveAll() {
+  let saved = 0, failed = 0;
+  for (const section of fields) {
+    for (const f of section.items) {
+      const inp = document.getElementById('inp_' + f.key);
+      if (!inp) continue;
+      const val = inp.value.trim();
+      if (val !== (currentSettings[f.key] || '')) {
+        try {
+          const res = await fetch(API_BASE + '/api/admin/settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Admin-Token': ADMIN_TOKEN
+            },
+            body: JSON.stringify({ key: f.key, value: val })
+          });
+          const data = await res.json();
+          if (data.success) { currentSettings[f.key] = val; saved++; }
+          else { failed++; }
+        } catch (e) { failed++; }
+      }
+    }
+  }
+  if (failed === 0 && saved === 0) showToast('No changes detected', 'success');
+  else if (failed === 0) showToast(`${saved} setting(s) saved`, 'success');
+  else showToast(`${saved} saved, ${failed} failed`, 'error');
+}
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

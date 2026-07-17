@@ -59,6 +59,36 @@ async function initDB() {
     try { await exec(`ALTER TABLE users ADD COLUMN ${col} INTEGER DEFAULT 0`); } catch (e) {}
   }
 
+  await exec(`CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT DEFAULT (datetime('now'))
+  )`);
+
+  // Insert defaults only if table is empty
+  const count = await getRow('SELECT COUNT(*) as c FROM settings');
+  if (count.c === 0) {
+    const defaults = [
+      ['gridTitle', 'Daily Random RM8 ~ RM388'],
+      ['claimText', 'Pls Screenshot To Claim'],
+      ['comeBackText', 'Come back tomorrow for Day {day}!'],
+      ['tabRewards', 'Rewards'],
+      ['tabSlot', 'Slot Win Rate'],
+      ['appTitle', 'CheckIn'],
+      ['rewardGifDay7', 'day7.gif'],
+      ['rewardGifDay14', 'day14.gif'],
+      ['rewardGifDay21', 'day21.gif'],
+      ['rewardGifDay30', 'day30.gif'],
+      ['dailyGif', 'daily.gif'],
+      ['slotUrl', 'slot.html'],
+      ['loginPage', 'login_apk.html'],
+      ['registerPage', 'register_apk.html']
+    ];
+    for (const [k, v] of defaults) {
+      await exec('INSERT INTO settings (key, value) VALUES (?, ?)', [k, v]);
+    }
+  }
+
   console.log('Turso database initialized.');
 }
 
@@ -231,6 +261,31 @@ initDB().then(() => {
     res.json({ success: true, message: '邀请码 ' + code + ' 已添加' });
   });
 
+  // ========== Settings API ==========
+  app.get('/api/settings', async (req, res) => {
+    const rows = await getAll('SELECT key, value FROM settings');
+    const settings = {};
+    for (const row of rows) { settings[row.key] = row.value; }
+    res.json({ success: true, settings });
+  });
+
+  app.get('/api/admin/settings', async (req, res) => {
+    const rows = await getAll('SELECT key, value, updated_at FROM settings');
+    res.json({ success: true, settings: rows });
+  });
+
+  app.post('/api/admin/settings', adminMiddleware, async (req, res) => {
+    const { key, value } = req.body;
+    if (!key || value === undefined) return res.status(400).json({ error: 'key and value are required' });
+    const exists = await getRow('SELECT key FROM settings WHERE key = ?', [key]);
+    if (exists) {
+      await exec('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?', [value, key]);
+    } else {
+      await exec('INSERT INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    }
+    res.json({ success: true, message: 'Setting updated', key, value });
+  });
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', db: 'turso', time: new Date().toISOString() });
   });
@@ -242,6 +297,7 @@ initDB().then(() => {
     console.log(`  Login:    http://localhost:${PORT}/login.html`);
     console.log(`  Checkin:  http://localhost:${PORT}/checkin.html`);
     console.log(`  Admin:    http://localhost:${PORT}/admin.html`);
+    console.log(`  Config:   http://localhost:${PORT}/admin_config.html`);
     console.log(`  DB: Turso (${TURSO_URL})`);
     console.log(`========================================\n`);
   });
