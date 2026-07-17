@@ -83,6 +83,7 @@ async function initDB() {
       ['rewardGifDay21', 'day21.gif'],
       ['rewardGifDay30', 'day30.gif'],
       ['dailyGif', 'daily.gif'],
+      ['rewardBg', 'reward_bg.png'],
       ['slotUrl', 'slot.html'],
       ['loginPage', 'login_apk.html'],
       ['registerPage', 'register_apk.html']

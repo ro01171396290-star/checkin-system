@@ -18,7 +18,15 @@ body {
   padding: 18px 16px 80px;
   position: relative;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.phone-bg {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background-size: cover; background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(20px) brightness(0.2);
+  border-radius: 36px; z-index: 0; pointer-events: none;
 }
 
 /* Header */
@@ -261,6 +269,7 @@ body {
 <body>
 
 <div class="phone" id="app">
+  <div class="phone-bg" id="phoneBg"></div>
   <!-- Tab: Rewards -->
   <div class="tab-page" id="tabRewards">
   <div class="header">
@@ -273,7 +282,9 @@ body {
 
   <div class="user-bar">
     <span class="user-code" id="userCode">--</span>
-    <button class="logout-btn" onclick="doLogout()">Logout</button>
+    <div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
   </div>
 
   <div class="day-counter">
@@ -315,8 +326,8 @@ body {
   </div><!-- /tabSlot -->
 
   <div class="bottom-nav">
-    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">ðŸŽ</span>Rewards</div>
-    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">ðŸŽ°</span>Slot Win Rate</div>
+    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">🎁</span>Rewards</div>
+    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">🎰</span>Slot Win Rate</div>
   </div>
 </div>
 
@@ -343,11 +354,60 @@ body {
 const API_BASE = 'https://checkin-system-dok2.onrender.com';
 let token, user;
 
+// ========== Remote Settings ==========
+let S = {
+  appTitle: 'CheckIn', gridTitle: 'Daily Random RM8 ~ RM388',
+  claimText: 'Pls Screenshot To Claim', comeBackText: 'Come back tomorrow for Day {day}!',
+  tabRewards: 'Rewards', tabSlot: 'Slot Win Rate',
+  rewardGifs: {7:'day7.gif',14:'day14.gif',21:'day21.gif',30:'day30.gif'},
+  dailyGif: 'daily.gif', rewardBg: 'reward_bg.png',
+  slotUrl: 'slot.html',
+  loginPage: 'login_apk.html', registerPage: 'register_apk.html'
+};
+
+async function loadSettings() {
+  try {
+    const res = await fetch(API_BASE + '/api/settings');
+    const data = await res.json();
+    if (data.success && data.settings) {
+      const s = data.settings;
+      S.appTitle = s.appTitle || S.appTitle;
+      S.gridTitle = s.gridTitle || S.gridTitle;
+      S.claimText = s.claimText || S.claimText;
+      S.comeBackText = s.comeBackText || S.comeBackText;
+      S.tabRewards = s.tabRewards || S.tabRewards;
+      S.tabSlot = s.tabSlot || S.tabSlot;
+      S.rewardGifs = {
+        7: s.rewardGifDay7 || 'day7.gif', 14: s.rewardGifDay14 || 'day14.gif',
+        21: s.rewardGifDay21 || 'day21.gif', 30: s.rewardGifDay30 || 'day30.gif'
+      };
+      S.dailyGif = s.dailyGif || 'daily.gif';
+      S.rewardBg = s.rewardBg || 'reward_bg.png';
+      S.slotUrl = s.slotUrl || 'slot.html';
+      S.loginPage = s.loginPage || 'login_apk.html';
+      S.registerPage = s.registerPage || 'register_apk.html';
+    }
+  } catch(e) { console.log('Settings load skipped, using defaults'); }
+  applySettings();
+}
+
+function applySettings() {
+  document.title = S.appTitle;
+  var el = document.querySelector('.app-title'); if (el) el.textContent = S.appTitle;
+  el = document.getElementById('gridTitle'); if (el) el.textContent = S.gridTitle;
+  el = document.getElementById('navRewards'); if (el) el.innerHTML = '<span class="nav-icon">🎁</span>' + S.tabRewards;
+  el = document.getElementById('navSlot'); if (el) el.innerHTML = '<span class="nav-icon">🎰</span>' + S.tabSlot;
+  el = document.getElementById('slotFrame'); if (el) el.src = S.slotUrl;
+  document.querySelectorAll('.daily-claim-text').forEach(function(e) { e.textContent = S.claimText; });
+  el = document.querySelector('.daily-gif'); if (el) el.src = S.dailyGif;
+  el = document.getElementById('phoneBg'); if (el && S.rewardBg) el.style.backgroundImage = "url('" + S.rewardBg + "')";
+}
+
 function checkAuth() {
   token = localStorage.getItem('checkin_token');
   const userStr = localStorage.getItem('checkin_user');
   if (!token || !userStr) {
-    window.location.href = 'login_apk.html';
+    window.location.href = S.loginPage;
     return false;
   }
   user = JSON.parse(userStr);
@@ -358,7 +418,7 @@ function checkAuth() {
 function doLogout() {
   localStorage.removeItem('checkin_token');
   localStorage.removeItem('checkin_user');
-  window.location.href = 'login_apk.html';
+  window.location.href = S.loginPage;
 }
 
 // ========== API ==========
@@ -413,11 +473,6 @@ function isTodayChecked() {
 
 // ========== Logic ==========
 async function doCheckin() {
-  if (appState.checkedToday) {
-    showStatus("You've checked in today!", 'already');
-    return;
-  }
-
   try {
     const data = await apiPost('/api/checkin', {});
     if (data.error) {
@@ -427,7 +482,7 @@ async function doCheckin() {
 
     appState.checkedToday = data.checkedToday;
     appState.streakDay = data.streakDay;
-    appState.totalDays = data.streakDay;
+    appState.totalDays = data.totalDays;
     appState.lastDate = new Date().toISOString().slice(0, 10);
     if (!appState.history.includes(appState.lastDate)) {
       appState.history.push(appState.lastDate);
@@ -449,21 +504,24 @@ async function doCheckin() {
 
 function closeDailyPopup() {
   document.getElementById('dailyOverlay').classList.remove('show');
-  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const nextDay = displayDay % 30 + 1;
+  showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
 
 let currentRewardDay = 0;
 
 function showReward(day) {
-  const gifs = { 7:'day7.gif', 14:'day14.gif', 21:'day21.gif', 30:'day30.gif' };
   currentRewardDay = day;
-  document.getElementById('rewardGif').src = gifs[day];
+  document.getElementById('rewardGif').src = S.rewardGifs[day] || 'day'+day+'.gif';
   document.getElementById('rewardOverlay').classList.add('show');
 }
 
 function claimReward() {
   document.getElementById('rewardOverlay').classList.remove('show');
-  showStatus("Come back tomorrow for Day " + (appState.streakDay + 1) + "!", 'success');
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const nextDay = displayDay % 30 + 1;
+  showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
 
 function showStatus(msg, cls) {
@@ -477,19 +535,20 @@ function showStatus(msg, cls) {
 function updateUI() {
   const streak = appState.streakDay;
   const totalDays = appState.totalDays;
+  const displayDay = totalDays === 0 ? 0 : ((totalDays - 1) % 30) + 1;
   const milestoneDays = [7, 14, 21, 30];
-  const icons = ['day7.gif','day14.gif','day21.gif','day30.gif'];
+  const icons = [S.rewardGifs[7], S.rewardGifs[14], S.rewardGifs[21], S.rewardGifs[30]];
   const labels = ['Day 7','Day 14','Day 21','Day 30'];
 
-  document.getElementById('dayNum').textContent = totalDays;
+  document.getElementById('dayNum').textContent = displayDay;
 
   // Progress bar
-  document.getElementById('progressBar').style.width = Math.min(totalDays / 30 * 100, 100) + '%';
+  document.getElementById('progressBar').style.width = (displayDay / 30 * 100) + '%';
 
   // 30-Day Grid
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
-  const lastDone = Math.min(totalDays, 30);
+  const lastDone = displayDay;
 
   for (let i = 1; i <= 30; i++) {
     const div = document.createElement('div');
@@ -516,7 +575,7 @@ function updateUI() {
     if (milestoneDays.includes(i)) {
       const badge = document.createElement('span');
       badge.className = 'badge';
-      badge.textContent = appState.milestonesClaimed['day' + i] ? 'âœ“' : 'â­';
+      badge.textContent = appState.milestonesClaimed['day' + i] ? '✓' : '⭐';
       div.appendChild(badge);
     }
 
@@ -542,7 +601,7 @@ function updateUI() {
 
     const reward = document.createElement('div');
     reward.className = 'ms-reward';
-    reward.textContent = appState.milestonesClaimed['day' + m] ? 'âœ“ Bonus' : 'Bonus';
+    reward.textContent = appState.milestonesClaimed['day' + m] ? '✓ Bonus' : 'Bonus';
 
     card.appendChild(icon);
     card.appendChild(dayEl);
@@ -563,7 +622,7 @@ function updateUI() {
 
 // ========== Init ==========
 if (checkAuth()) {
-  loadState();
+  loadSettings().then(function() { loadState(); });
 }
 
 function switchTab(tab) {
