@@ -290,6 +290,36 @@ body {
       </div>
       <div class="msg" id="addMsg"></div>
     </div>
+
+    <div class="section">
+      <div class="list-header">
+        <div class="section-title" style="margin-bottom:0;">Invite Code List</div>
+        <span class="list-count" id="inviteListCount">0 codes</span>
+      </div>
+      <div class="list-search-row" style="margin-bottom:12px;">
+        <input class="search-input" id="inviteSearch" placeholder="Search invite codes..." oninput="filterInviteCodes()">
+        <select id="inviteStatusFilter" onchange="filterInviteCodes()" style="background:#1a1a2e;border:1px solid #2a2a42;border-radius:10px;color:#fff;padding:12px;font-size:14px;outline:none;">
+          <option value="">All</option>
+          <option value="unused">Unused</option>
+          <option value="used">Used</option>
+        </select>
+        <button class="btn btn-reset" onclick="cleanAutoCodes()" style="background:#2a1a1a;color:#e17055;border:1px solid #3a2a2a;" title="Delete all SR-00001 ~ SR-99999 auto-generated codes">CLEAN AUTO</button>
+      </div>
+      <div class="code-table-wrapper" style="max-height:400px;">
+        <div class="empty-list" id="emptyInviteList">No invite codes found</div>
+        <table class="code-table" id="inviteTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>Invite Code</th>
+              <th>Status</th>
+              <th>Source</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="inviteTableBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- Tab 3: Phone Number / Code List -->
@@ -360,6 +390,7 @@ const ADMIN_TOKEN = 'admin-token-change-me';
 
 let currentSearchCode = '';
 let allUsers = [];
+let allInviteCodes = [];
 
 function msgEl(id) { return document.getElementById(id); }
 
@@ -377,6 +408,7 @@ function switchTab(tab) {
   document.getElementById('panel-' + tab).classList.add('active');
   event.target.classList.add('active');
   if (tab === 'codeList') loadCodeList();
+  if (tab === 'addInvite') loadInviteCodes();
 }
 
 // ========== Search by Code ==========
@@ -501,7 +533,7 @@ async function doAddInvite() {
       body: JSON.stringify({ code })
     });
     const data = await res.json();
-    if (data.success) { showMsg('addMsg', data.message, 'success'); msgEl('newCode').value = ''; }
+    if (data.success) { showMsg('addMsg', data.message, 'success'); msgEl('newCode').value = ''; loadInviteCodes(); }
     else { showMsg('addMsg', data.error || 'Failed', 'error'); }
   } catch (e) { showMsg('addMsg', 'Network error', 'error'); }
 }
@@ -579,6 +611,73 @@ async function deleteUser(code) {
 
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+// ========== Invite Code Management ==========
+async function loadInviteCodes() {
+  try {
+    const res = await fetch(API_BASE + '/api/admin/invite-codes', {
+      headers: { 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    allInviteCodes = data.codes;
+    renderInviteCodes(allInviteCodes);
+  } catch (e) { console.error('loadInviteCodes:', e); }
+}
+
+function renderInviteCodes(codes) {
+  msgEl('inviteListCount').textContent = codes.length + ' codes';
+  const tbody = msgEl('inviteTableBody');
+  if (codes.length === 0) {
+    msgEl('emptyInviteList').style.display = 'block';
+    msgEl('inviteTable').style.display = 'none';
+    return;
+  }
+  msgEl('emptyInviteList').style.display = 'none';
+  msgEl('inviteTable').style.display = 'table';
+  tbody.innerHTML = '';
+  codes.forEach(c => {
+    const tr = document.createElement('tr');
+    const statusColor = c.status === 'used' ? '#e17055' : '#00cec9';
+    const sourceLabel = c.source === 'auto' ? 'Auto' : 'Manual';
+    const sourceColor = c.source === 'auto' ? '#888' : '#a29bfe';
+    tr.innerHTML =
+      '<td class="col-code">' + escapeHtml(c.code) + '</td>' +
+      '<td style="color:' + statusColor + ';font-weight:700;">' + c.status + '</td>' +
+      '<td style="color:' + sourceColor + ';font-size:12px;">' + sourceLabel + '</td>' +
+      '<td class="col-date">' + (c.created_at ? c.created_at.slice(0, 10) : '-') + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function filterInviteCodes() {
+  const q = msgEl('inviteSearch').value.trim().toLowerCase();
+  const status = msgEl('inviteStatusFilter').value;
+  let filtered = allInviteCodes;
+  if (q) {
+    filtered = filtered.filter(c => c.code.toLowerCase().includes(q));
+  }
+  if (status) {
+    filtered = filtered.filter(c => c.status === status);
+  }
+  renderInviteCodes(filtered);
+}
+
+async function cleanAutoCodes() {
+  if (!confirm('确定要删除所有自动生成的邀请码 (SR-00001 ~ SR-99999) 吗？\n手动添加的邀请码不会被删除。')) return;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/invite-codes/clean-auto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN }
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message);
+      loadInviteCodes();
+    } else {
+      alert(data.error || 'Clean failed');
+    }
+  } catch (e) { alert('Network error'); }
 }
 
 // Init

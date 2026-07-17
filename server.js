@@ -58,6 +58,9 @@ async function initDB() {
   for (const col of ['day7', 'day14', 'day21', 'day30']) {
     try { await exec(`ALTER TABLE users ADD COLUMN ${col} INTEGER DEFAULT 0`); } catch (e) {}
   }
+  try { await exec("ALTER TABLE invite_codes ADD COLUMN source TEXT DEFAULT 'manual'"); } catch (e) {}
+  await exec("UPDATE invite_codes SET source = 'auto' WHERE code LIKE 'SR-%' AND CAST(REPLACE(code,'SR-','') AS INTEGER) BETWEEN 1 AND 99999 AND (source IS NULL OR source = '')");
+  await exec("UPDATE invite_codes SET source = 'manual' WHERE source IS NULL OR source = ''");
 
   await exec(`CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
@@ -257,8 +260,35 @@ initDB().then(() => {
     if (!code) return res.status(400).json({ error: '邀请码为必填项' });
     const exists = await getRow('SELECT id FROM invite_codes WHERE code = ?', [code]);
     if (exists) return res.status(400).json({ error: '该邀请码已存在' });
-    await exec('INSERT INTO invite_codes (code) VALUES (?)', [code]);
+    await exec("INSERT INTO invite_codes (code, source) VALUES (?, 'manual')", [code]);
     res.json({ success: true, message: '邀请码 ' + code + ' 已添加' });
+  });
+
+  // List invite codes with optional search
+  app.get('/api/admin/invite-codes', async (req, res) => {
+    const { search, status } = req.query;
+    let sql = 'SELECT code, status, source, created_at FROM invite_codes WHERE 1=1';
+    const params = [];
+    if (search) {
+      sql += ' AND code LIKE ?';
+      params.push(`%${search}%`);
+    }
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+    sql += ' ORDER BY created_at DESC LIMIT 200';
+    const codes = await getAll(sql, params);
+    res.json({ success: true, codes });
+  });
+
+  // Delete auto-generated invite codes (SR-00001 ~ SR-99999)
+  app.post('/api/admin/invite-codes/clean-auto', async (req, res) => {
+    const result = await getRow(
+      "SELECT COUNT(*) as c FROM invite_codes WHERE source = 'auto'"
+    );
+    await exec("DELETE FROM invite_codes WHERE source = 'auto'");
+    res.json({ success: true, deleted: result.c, message: `已删除 ${result.c} 条自动生成的邀请码` });
   });
 
   // ========== Settings API ==========
