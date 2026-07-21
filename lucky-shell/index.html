@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lucky Shell</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    background:#0a0a0a;font-family:'Segoe UI',Arial,sans-serif;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+    color:#fff;overflow-x:hidden;-webkit-tap-highlight-color:transparent;
+    user-select:none;-webkit-user-select:none;
+}
+.top-bar{width:100%;display:flex;justify-content:flex-end;padding:10px 14px 0}
+.top-bar a{font-size:12px;color:#888;text-decoration:none;padding:6px 12px;border:1px solid #333;border-radius:6px}
+.top-bar a:active{background:#222}
+
+.header{text-align:center;padding:8px 12px 2px}
+.header h1{font-size:clamp(20px,5vw,28px);font-weight:900;letter-spacing:1px;color:#ffd700}
+
+.voucher-box{display:flex;align-items:center;gap:8px;margin:6px 0 10px;flex-wrap:wrap;justify-content:center}
+.voucher-box input{
+    padding:10px 14px;font-size:15px;border-radius:8px;border:2px solid #333;
+    background:#1a1a1a;color:#ffd700;outline:none;width:180px;text-align:center;
+    letter-spacing:2px;text-transform:uppercase;
+}
+.voucher-box input:focus{border-color:#ffd700}
+.voucher-box button{
+    padding:10px 22px;font-size:15px;font-weight:700;border-radius:8px;border:none;
+    background:linear-gradient(180deg,#e63946,#b71c1c);color:#fff;cursor:pointer;letter-spacing:1px
+}
+.voucher-box button:active{opacity:.8}
+.voucher-box button:disabled{opacity:.4;pointer-events:none}
+
+.status{font-size:13px;color:#aaa;text-align:center;min-height:20px;margin-bottom:6px}
+.status em{color:#ffd700;font-style:normal;font-weight:700}
+
+.grid-wrap{display:flex;justify-content:center;padding:0 4px;flex:1}
+.shell-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:clamp(4px,1.5vw,10px);
+    width:min(90vw,460px);
+    align-content:start;
+}
+.shell-card{aspect-ratio:1;perspective:700px;cursor:pointer}
+.shell-card.flipped,.shell-card.matched{cursor:default}
+
+.shell-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .5s cubic-bezier(.4,0,.2,1);
+    transform-style:preserve-3d;
+}
+.shell-card.flipped .shell-inner{transform:rotateY(180deg)}
+
+.shell-front,.shell-back{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center
+}
+.shell-front{background:#1a1a2e;border:2px solid #333}
+.shell-front img{width:92%;height:92%;object-fit:contain}
+.shell-front:hover{border-color:#ffd700;box-shadow:0 0 16px rgba(255,215,0,.35)}
+
+.shell-back{transform:rotateY(180deg);background:#1a1a2e;border:2px solid #555}
+.shell-back img{width:90%;height:90%;object-fit:contain}
+
+.shell-card.matched .shell-back{
+    border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,.55);
+    animation:glow .7s ease-in-out infinite alternate
+}
+@keyframes glow{from{box-shadow:0 0 12px rgba(255,215,0,.3)}to{box-shadow:0 0 28px rgba(255,215,0,.8)}}
+
+.popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;justify-content:center;align-items:center;flex-direction:column}
+.popup.show{display:flex;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.popup-inner{max-width:340px;width:90%;text-align:center}
+.popup-inner img{width:100%;border-radius:16px}
+.popup-inner p{margin-top:10px;font-size:12px;color:#aaa}
+.popup-inner button{margin-top:14px;padding:10px 36px;font-size:15px;font-weight:700;border-radius:8px;border:none;background:#ffd700;color:#000;cursor:pointer}
+
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#333;color:#ffd700;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+.reset-btn{display:none;margin:12px 0 16px;padding:8px 20px;font-size:12px;border-radius:6px;border:1px solid #444;background:transparent;color:#888;cursor:pointer}
+.reset-btn:active{background:#1a1a1a;color:#fff}
+
+.spinner{display:none;width:24px;height:24px;border:3px solid #333;border-top-color:#ffd700;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- top-bar removed per user request -->
+<div class="header"><h1>Lucky Shell</h1></div>
+
+<div class="voucher-box">
+    <input type="text" id="voucherInput" placeholder="Voucher Code" maxlength="20" autocomplete="off">
+    <button id="spinBtn">SPIN</button>
+    <div class="spinner" id="spinner"></div>
+</div>
+
+<div class="status" id="status">Enter a voucher code to play</div>
+
+<div class="grid-wrap"><div class="shell-grid" id="shellGrid"></div></div>
+
+<button class="reset-btn" id="resetBtn">New Game</button>
+
+<div class="popup" id="popup">
+    <div class="popup-inner">
+        <img id="popupImg" src="" alt="">
+        <p>Screenshot &amp; Claim With Our Customer Service</p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.API_BASE || '';
+const PRIZES=[8,18,28,38,68,88,188,288,388];
+const TOTAL=16;
+let targetPrize=null,shells=[],flipped=[],counts={},active=false,won=false,currentCode='';
+
+const vin=document.getElementById('voucherInput'),spinBtn=document.getElementById('spinBtn');
+const statusEl=document.getElementById('status'),gridEl=document.getElementById('shellGrid');
+const popup=document.getElementById('popup'),popupImg=document.getElementById('popupImg');
+const toast=document.getElementById('toast'),resetBtn=document.getElementById('resetBtn');
+const spinner=document.getElementById('spinner');
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+
+function show(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
+function loading(on){spinBtn.disabled=on;spinner.style.display=on?'block':'none';vin.disabled=on}
+
+function generateShells(target){
+    const others=PRIZES.filter(p=>p!==target);
+    let r=[];for(let i=0;i<3;i++)r.push(target);
+    let f=others.slice();shuffle(others);
+    for(let i=0;i<5;i++)f.push(others[i]);
+    shuffle(f);r=r.concat(f);shuffle(r);return r;
+}
+
+function renderGrid(){
+    gridEl.innerHTML='';
+    for(let i=0;i<TOTAL;i++){
+        const c=document.createElement('div');c.className='shell-card';c.dataset.i=i;
+        c.innerHTML=`<div class="shell-inner"><div class="shell-front"><img src="img/原图.png" alt=""></div><div class="shell-back"><img src="img/RM${shells[i]}奖励贝壳.png" alt=""></div></div>`;
+        c.addEventListener('click',()=>flip(i));gridEl.appendChild(c);
+    }
+}
+
+function flip(i){
+    if(!active||won||flipped[i])return;
+    flipped[i]=true;const p=shells[i];
+    counts[p]=(counts[p]||0)+1;
+    gridEl.children[i].classList.add('flipped');
+    const fc=flipped.filter(Boolean).length;
+    statusEl.innerHTML=`Flipped: <em>${fc}</em>/${TOTAL}`;
+
+    for(let[k,v]of Object.entries(counts)){
+        if(v>=3){won=true;active=false;
+            const wp=parseInt(k);
+            for(let j=0;j<TOTAL;j++)if(shells[j]===wp)gridEl.children[j].classList.add('matched');
+            fetch(`${API}/api/voucher/mark_used`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:currentCode})});
+            setTimeout(()=>showPopup(wp),800);return;
+        }
+    }
+}
+
+function showPopup(p){popupImg.src=`img/RM${p}Popup贝壳.gif`;popup.classList.add('show');statusEl.innerHTML=`Won <em>RM${p}</em>! Screenshot & claim.`}
+function closePopup(){popup.classList.remove('show')}
+
+async function validateVoucher(code){
+    const res=await fetch(`${API}/api/voucher/validate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    return res.json();
+}
+
+function startGame(code,prize){
+    targetPrize=prize;currentCode=code;
+    shells=generateShells(targetPrize);
+    flipped=new Array(TOTAL).fill(false);counts={};active=true;won=false;
+    renderGrid();
+    statusEl.innerHTML=`Target: <em>RM${targetPrize}</em> &mdash; Find 3 matching shells!`;
+    resetBtn.style.display='inline-block';
+    vin.value='';loading(true);
+}
+
+spinBtn.addEventListener('click',async()=>{
+    const code=vin.value.trim().toUpperCase();
+    if(!code){show('Enter a voucher code');return}
+    loading(true);
+    try{
+        const r=await validateVoucher(code);
+        if(!r.ok){show(r.message);loading(false);return}
+        startGame(code,r.prize);
+    }catch(e){show('Server error. Is backend running?');loading(false)}
+});
+vin.addEventListener('keydown',e=>{if(e.key==='Enter')spinBtn.click()});
+
+resetBtn.addEventListener('click',()=>{
+    shells=[];flipped=[];counts={};active=false;won=false;targetPrize=null;currentCode='';
+    gridEl.innerHTML='';statusEl.innerHTML='Enter a voucher code to play';
+    resetBtn.style.display='none';loading(false);vin.focus();
+    closePopup();
+});
+</script>
+</body>
+</html>

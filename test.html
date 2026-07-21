@@ -1,9 +1,9 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CheckIn</title>
+<title>CheckIn Test</title>
 <style>
 :root {
   --primary: #6c5ce7;
@@ -602,7 +602,7 @@ let appState = {
 
 async function loadState() {
   try {
-    const data = await apiGet('/api/checkin/status');
+    const data = await apiGet('/api/checkin-test/status');
     if (!data.success) return;
     appState.totalDays = data.totalDays || 0;
     appState.checkedToday = data.checkedToday;
@@ -623,7 +623,7 @@ function isTodayChecked() {
 // ========== Logic ==========
 async function doCheckin() {
   try {
-    const data = await apiPost('/api/checkin', {});
+    const data = await apiPost('/api/checkin-test', {});
     if (data.error) {
       showStatus(data.error, 'already');
       return;
