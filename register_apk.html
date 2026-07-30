@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -125,8 +125,8 @@ body {
 </div>
 
 <script>
-// è‡ªåŠ¨æ£€æµ‹éƒ¨ç½²çŽ¯å¢ƒ
-const API_BASE = (window.location.protocol === 'file:') ? 'http://https://checkin-system-dok2.onrender.com' : window.location.origin;
+// 自动检测部署环境
+const API_BASE = (window.location.protocol === 'file:') ? 'https://checkin-system-dok2.onrender.com' : window.location.origin;
 
 function showMsg(msg, type) {
   const el = document.getElementById('msg');
@@ -183,7 +183,7 @@ async function doRegister() {
   }
 }
 
-// å›žè½¦é”®æäº¤
+// 回车键提交
 document.getElementById('inviteCode').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doRegister();
 });

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -223,7 +223,7 @@ body {
 </div>
 
 <script>
-const API_BASE = 'http://https://checkin-system-dok2.onrender.com';
+const API_BASE = 'https://checkin-system-dok2.onrender.com';
 const ADMIN_TOKEN = 'admin-token-change-me';
 
 let currentSearchCode = '';
@@ -266,7 +266,7 @@ async function doSearch() {
     [{key:'day7',label:'Day 7'},{key:'day14',label:'Day 14'},{key:'day21',label:'Day 21'},{key:'day30',label:'Day 30'}].forEach(m => {
       const badge = document.createElement('div');
       badge.className = 'ms-badge' + (data[m.key] ? ' claimed' : '');
-      badge.textContent = m.label + (data[m.key] ? ' âœ“' : '');
+      badge.textContent = m.label + (data[m.key] ? ' ✓' : '');
       msContainer.appendChild(badge);
     });
 
