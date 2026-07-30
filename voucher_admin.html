@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Voucher Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    background:#0a0a0a;font-family:'Segoe UI',Arial,sans-serif;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+    color:#fff;overflow-x:hidden;-webkit-tap-highlight-color:transparent;
+    user-select:none;-webkit-user-select:none;padding:0 12px 24px;
+}
+.top-bar{width:100%;display:flex;justify-content:flex-start;padding:10px 2px 0}
+.top-bar a{font-size:12px;color:#888;text-decoration:none;padding:6px 12px;border:1px solid #333;border-radius:6px}
+.top-bar a:active{background:#222}
+
+.header{text-align:center;padding:12px 0 8px}
+.header h1{font-size:clamp(20px,5vw,26px);font-weight:900;color:#ffd700;letter-spacing:1px}
+
+.panel{width:100%;max-width:500px;background:#111;border:1px solid #222;border-radius:12px;padding:18px;margin-bottom:14px}
+.panel h2{font-size:15px;color:#ccc;margin-bottom:14px;font-weight:600}
+
+.form-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.form-row label{font-size:13px;color:#aaa;min-width:60px}
+.form-row select,.form-row input[type=number]{
+    padding:8px 12px;font-size:14px;border-radius:6px;border:1px solid #333;
+    background:#1a1a1a;color:#ffd700;outline:none;flex:1;min-width:100px
+}
+.form-row select:focus,.form-row input:focus{border-color:#ffd700}
+.form-row input[type=number]{width:90px;flex:0}
+
+.gen-btn{
+    width:100%;padding:12px;font-size:15px;font-weight:700;border-radius:8px;border:none;
+    background:linear-gradient(180deg,#e63946,#b71c1c);color:#fff;cursor:pointer;letter-spacing:1px;margin-top:4px
+}
+.gen-btn:active{opacity:.8}
+.gen-btn:disabled{opacity:.4}
+
+.result-box{margin-top:14px;display:none}
+.result-box h3{font-size:13px;color:#888;margin-bottom:8px}
+.result-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.result-actions button{
+    padding:7px 14px;font-size:11px;border-radius:6px;border:1px solid #444;
+    background:transparent;color:#ccc;cursor:pointer
+}
+.result-actions button:active{background:#222}
+.result-actions .export-btn{border-color:#4caf50;color:#4caf50}
+
+.code-list{list-style:none;max-height:260px;overflow-y:auto}
+.code-list li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;font-size:13px;border-bottom:1px solid #1a1a1a;
+    font-family:'Courier New',monospace;letter-spacing:1px;color:#ffd700
+}
+.code-list li .badge{
+    font-size:10px;padding:3px 8px;border-radius:10px;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0
+}
+.badge-new{background:#1a3a1a;color:#4caf50}
+.badge-used{background:#3a1a1a;color:#f44336}
+
+.voucher-group{margin-bottom:14px}
+.voucher-group h3{
+    font-size:14px;color:#ffd700;margin-bottom:6px;padding-bottom:4px;
+    border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center
+}
+.voucher-group h3 .count{font-size:11px;color:#666;font-weight:400}
+
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#333;color:#ffd700;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+.spinner{display:none;width:24px;height:24px;border:3px solid #333;border-top-color:#ffd700;border-radius:50%;animation:spin .6s linear infinite;margin:12px auto 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="top-bar"><a href="slot.html">Back to Game</a></div>
+<div class="header"><h1>Voucher Generator</h1></div>
+
+<div class="panel">
+    <h2>Generate New Vouchers</h2>
+    <div class="form-row">
+        <label>Prize:</label>
+        <select id="genPrize">
+            <option value="8">RM8</option><option value="18">RM18</option><option value="28">RM28</option>
+            <option value="38">RM38</option><option value="68">RM68</option><option value="88">RM88</option>
+            <option value="188">RM188</option><option value="288">RM288</option><option value="388">RM388</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label>Quantity:</label>
+        <input type="number" id="genQty" value="5" min="1" max="200">
+    </div>
+    <button class="gen-btn" id="genBtn">GENERATE</button>
+    <div class="spinner" id="spinner"></div>
+
+    <div class="result-box" id="resultBox">
+        <h3 id="resultTitle"></h3>
+        <ul class="code-list" id="codeList"></ul>
+        <div class="result-actions">
+            <button id="copyBtn">Copy Codes</button>
+            <button class="export-btn" id="exportBatchBtn">Export Batch</button>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>All Vouchers</h2>
+    <button class="gen-btn" id="exportAllBtn" style="margin-bottom:14px;background:linear-gradient(180deg,#2e7d32,#1b5e20)">Export All to Excel</button>
+    <div id="voucherGroups"></div>
+    <div class="spinner" id="spinner2"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.API_BASE || '';
+const PRIZES=[8,18,28,38,68,88,188,288,388];
+
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+
+let lastCodes=[];
+
+async function loadAll(){
+    document.getElementById('spinner2').style.display='block';
+    try{
+        const res=await fetch(`${API}/api/voucher/list`);const data=await res.json();
+        const container=document.getElementById('voucherGroups');container.innerHTML='';
+        const sorted=PRIZES.filter(p=>data.groups[String(p)]);
+        if(!sorted.length){container.innerHTML='<p style="color:#555;text-align:center;padding:20px">No vouchers yet</p>';return}
+        for(const prize of sorted){
+            const items=data.groups[String(prize)].sort((a,b)=>b.created_at.localeCompare(a.created_at));
+            const usedCount=items.filter(i=>i.used).length;
+            const div=document.createElement('div');div.className='voucher-group';
+            div.innerHTML=`<h3>RM${prize} <span class="count">${items.length} total &middot; ${usedCount} used</span></h3>`;
+            const ul=document.createElement('ul');ul.className='code-list';
+            items.forEach(item=>{
+                const li=document.createElement('li');
+                li.innerHTML=`<span>${item.code}</span><span class="badge ${item.used?'badge-used':'badge-new'}">${item.used?'Used':'New'}</span>`;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);container.appendChild(div);
+        }
+    }catch(e){showToast('Server error. Is backend running?')}
+    document.getElementById('spinner2').style.display='none';
+}
+
+document.getElementById('genBtn').addEventListener('click',async()=>{
+    const prize=parseInt(document.getElementById('genPrize').value);
+    const qty=parseInt(document.getElementById('genQty').value)||5;
+    if(qty<1||qty>200){showToast('Quantity 1-200');return}
+    document.getElementById('genBtn').disabled=true;document.getElementById('spinner').style.display='block';
+    try{
+        const res=await fetch(`${API}/api/voucher/generate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prize,qty})});
+        const data=await res.json();
+        if(!data.ok){showToast(data.error);return}
+        lastCodes=data.codes.map(c=>c.code);
+        const rb=document.getElementById('resultBox');rb.style.display='block';
+        document.getElementById('resultTitle').textContent=`Generated ${qty} × RM${prize}`;
+        const cl=document.getElementById('codeList');cl.innerHTML='';
+        lastCodes.forEach(c=>{const li=document.createElement('li');li.innerHTML=`<span>${c}</span><span class="badge badge-new">New</span>`;cl.appendChild(li)});
+        showToast(`Generated ${qty} vouchers`);
+        loadAll();
+    }catch(e){showToast('Server error')}
+    document.getElementById('genBtn').disabled=false;document.getElementById('spinner').style.display='none';
+});
+
+document.getElementById('copyBtn').addEventListener('click',()=>{
+    navigator.clipboard.writeText(lastCodes.join('\n')).then(()=>showToast('Copied!')).catch(()=>showToast('Copy failed'));
+});
+
+document.getElementById('exportBatchBtn').addEventListener('click',()=>{
+    if(!lastCodes.length){showToast('No batch to export');return}
+    const prize=document.getElementById('genPrize').value;
+    const BOM='\uFEFF',h='Code,Prize,Status\n';
+    const rows=lastCodes.map(c=>`${c},RM${prize},New`).join('\n');
+    const blob=new Blob([BOM+h+rows],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`vouchers_RM${prize}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+});
+
+document.getElementById('exportAllBtn').addEventListener('click',()=>{
+    window.open(`${API}/api/voucher/export`,'_blank');
+});
+
+loadAll();
+</script>
+</body>
+</html>

@@ -97,6 +97,15 @@ async function initDB() {
     }
   }
 
+  // Voucher table for Lucky Shell game
+  await exec(`CREATE TABLE IF NOT EXISTS vouchers (
+    code TEXT PRIMARY KEY,
+    prize INTEGER NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    won_at TEXT
+  )`);
+
   console.log('Turso database initialized.');
 }
 
@@ -179,9 +188,14 @@ initDB().then(() => {
     const milestones = [7, 14, 21, 30];
     let newMilestone = 0;
     await exec('INSERT INTO checkins (user_id, checkin_date, streak_day) VALUES (?, ?, ?)', [req.userId, today, streakDay]);
-    const ms = milestones.filter(m => streakDay === m && !user['day' + m]);
-    if (ms.length > 0) { await exec(`UPDATE users SET total_days = total_days + 1, day${ms[0]} = 1 WHERE id = ?`, [req.userId]); newMilestone = ms[0]; }
-    else { await exec('UPDATE users SET total_days = total_days + 1 WHERE id = ?', [req.userId]); }
+    // Reset total_days when streak breaks (yesterday not checked in)
+    if (streakDay === 1) {
+      await exec('UPDATE users SET total_days = 1, day7 = 0, day14 = 0, day21 = 0, day30 = 0 WHERE id = ?', [req.userId]);
+    } else {
+      const ms = milestones.filter(m => streakDay === m && !user['day' + m]);
+      if (ms.length > 0) { await exec(`UPDATE users SET total_days = total_days + 1, day${ms[0]} = 1 WHERE id = ?`, [req.userId]); newMilestone = ms[0]; }
+      else { await exec('UPDATE users SET total_days = total_days + 1 WHERE id = ?', [req.userId]); }
+    }
     res.json({ success: true, streakDay, newMilestone, checkedToday: true });
   });
 
@@ -371,6 +385,76 @@ initDB().then(() => {
   // API: get current site_url (for admin panel to build upload URLs)
   app.get('/api/admin/site-info', async (req, res) => {
     res.json({ success: true, siteUrl: SITE_URL, uploadDir: '/public/uploads/' });
+  });
+
+  // ========== Voucher API (Lucky Shell) ==========
+  const VOUCHER_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const VOUCHER_PRIZES = [8, 18, 28, 38, 68, 88, 188, 288, 388];
+
+  function genVoucherCode() {
+    let code = '';
+    for (let i = 0; i < 8; i++) code += VOUCHER_CHARS[Math.floor(Math.random() * VOUCHER_CHARS.length)];
+    return code;
+  }
+
+  app.post('/api/voucher/generate', async (req, res) => {
+    const { prize, qty } = req.body;
+    const p = parseInt(prize) || 8;
+    const q = parseInt(qty) || 5;
+    if (!VOUCHER_PRIZES.includes(p)) return res.status(400).json({ error: 'Invalid prize' });
+    if (q < 1 || q > 200) return res.status(400).json({ error: 'Quantity 1-200' });
+
+    const codes = [];
+    const now = new Date().toISOString();
+    for (let i = 0; i < q; i++) {
+      let code;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        code = genVoucherCode();
+        const exists = await getRow('SELECT code FROM vouchers WHERE code = ?', [code]);
+        if (!exists) break;
+      }
+      await exec('INSERT INTO vouchers (code, prize, used, created_at) VALUES (?, ?, 0, ?)', [code, p, now]);
+      codes.push({ code, prize: p, used: false, created_at: now });
+    }
+    res.json({ ok: true, codes, prize: p, qty: q });
+  });
+
+  app.post('/api/voucher/validate', async (req, res) => {
+    const code = (req.body.code || '').trim().toUpperCase();
+    if (!code) return res.json({ ok: false, message: 'Enter a voucher code' });
+    const row = await getRow('SELECT code, prize, used FROM vouchers WHERE code = ?', [code]);
+    if (!row) return res.json({ ok: false, message: 'Invalid voucher code' });
+    if (row.used) return res.json({ ok: false, message: 'Voucher already used' });
+    return res.json({ ok: true, prize: row.prize });
+  });
+
+  app.post('/api/voucher/mark_used', async (req, res) => {
+    const code = (req.body.code || '').trim().toUpperCase();
+    const now = new Date().toISOString();
+    await exec("UPDATE vouchers SET used = 1, won_at = ? WHERE code = ? AND used = 0", [now, code]);
+    res.json({ ok: true });
+  });
+
+  app.get('/api/voucher/list', async (req, res) => {
+    const rows = await getAll('SELECT code, prize, used, created_at FROM vouchers ORDER BY created_at DESC');
+    const groups = {};
+    for (const r of rows) {
+      const k = String(r.prize);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push({ code: r.code, prize: r.prize, used: r.used, created_at: r.created_at });
+    }
+    res.json({ ok: true, groups });
+  });
+
+  app.get('/api/voucher/export', async (req, res) => {
+    const rows = await getAll('SELECT code, prize, used, created_at FROM vouchers ORDER BY prize, created_at DESC');
+    let csv = '\ufeffCode,Prize,Status,Created\n';
+    for (const r of rows) {
+      csv += `${r.code},RM${r.prize},${r.used ? 'Used' : 'New'},${(r.created_at || '').slice(0, 10)}\n`;
+    }
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=vouchers.csv');
+    res.send(csv);
   });
 
   app.get('/api/health', (req, res) => {

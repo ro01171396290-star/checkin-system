@@ -2,663 +2,209 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Win Rate Scanner - Real-Time RTP Analyzer</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        neon: '#00FF00',
-        gold: '#FFD700',
-        dark: {
-          900: '#0a0a0a',
-          800: '#111111',
-          700: '#1a1a1a',
-          600: '#222222',
-        }
-      },
-      fontFamily: {
-        mono: ['Courier New', 'Consolas', 'monospace'],
-        sans: ['Segoe UI', 'system-ui', 'sans-serif'],
-      }
-    }
-  }
-}
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lucky Shell</title>
 <style>
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 5px #00FF00, 0 0 10px #00FF0040; }
-    50% { box-shadow: 0 0 20px #00FF00, 0 0 40px #00FF0080; }
-  }
-  @keyframes scan-line {
-    0% { top: -10%; }
-    100% { top: 110%; }
-  }
-  @keyframes code-rain {
-    0% { opacity: 1; transform: translateY(-100%); }
-    100% { opacity: 0; transform: translateY(100%); }
-  }
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-  @keyframes blink-star {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes spin-slow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  @keyframes toast-in {
-    from { opacity: 0; transform: translate(-50%, 10px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
-  }
-  @keyframes toast-out {
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -20px); }
-  }
-  .glow-border {
-    animation: pulse-glow 2s infinite;
-    border-color: #00FF00;
-  }
-  .scan-overlay::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #00FF00, transparent);
-    animation: scan-line 3s linear infinite;
-    pointer-events: none;
-    z-index: 10;
-  }
-  .shimmer-text {
-    background: linear-gradient(90deg, #00FF00, #88ff88, #00FF00);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: shimmer 2s linear infinite;
-  }
-  .card-enter {
-    animation: fadeInUp 0.5s ease-out forwards;
-  }
-  .btn-play {
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-play::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(0,255,0,0.3) 0%, transparent 60%);
-    animation: spin-slow 4s linear infinite;
-    pointer-events: none;
-  }
-  .blink-star {
-    animation: blink-star 1.5s ease-in-out infinite;
-  }
-  #scan-overlay {
-    display: none;
-  }
-  #scan-overlay.active {
-    display: flex;
-  }
-  .code-char {
-    display: inline-block;
-    animation: code-rain 1.5s linear infinite;
-    color: #00FF00;
-  }
-  .progress-bar-fill {
-    transition: width 0.15s linear;
-  }
-  .toast {
-    animation: toast-in 0.3s ease-out forwards;
-  }
-  .toast.hide {
-    animation: toast-out 0.3s ease-in forwards;
-  }
-  .platform-btn {
-    transition: all 0.3s ease;
-  }
-  .platform-btn.selected {
-    border-color: #00FF00;
-    box-shadow: 0 0 10px #00FF0040, 0 0 20px #00FF0020;
-    background: linear-gradient(135deg, rgba(0,255,0,0.12), rgba(0,255,0,0.04));
-  }
-  .platform-btn:not(.selected):hover {
-    border-color: #555;
-    background: rgba(255,255,255,0.03);
-  }
-  @media (max-width: 640px) {
-    .game-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    background:#0a0a0a;font-family:'Segoe UI',Arial,sans-serif;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+    color:#fff;overflow-x:hidden;-webkit-tap-highlight-color:transparent;
+    user-select:none;-webkit-user-select:none;
+}
+.top-bar{width:100%;display:flex;justify-content:flex-end;padding:10px 14px 0}
+.top-bar a{font-size:12px;color:#888;text-decoration:none;padding:6px 12px;border:1px solid #333;border-radius:6px}
+.top-bar a:active{background:#222}
+
+.header{text-align:center;padding:8px 12px 2px}
+.header h1{font-size:clamp(20px,5vw,28px);font-weight:900;letter-spacing:1px;color:#ffd700}
+
+.voucher-box{display:flex;align-items:center;gap:8px;margin:6px 0 10px;flex-wrap:wrap;justify-content:center}
+.voucher-box input{
+    padding:10px 14px;font-size:15px;border-radius:8px;border:2px solid #333;
+    background:#1a1a1a;color:#ffd700;outline:none;width:180px;text-align:center;
+    letter-spacing:2px;text-transform:uppercase;
+}
+.voucher-box input:focus{border-color:#ffd700}
+.voucher-box button{
+    padding:10px 22px;font-size:15px;font-weight:700;border-radius:8px;border:none;
+    background:linear-gradient(180deg,#e63946,#b71c1c);color:#fff;cursor:pointer;letter-spacing:1px
+}
+.voucher-box button:active{opacity:.8}
+.voucher-box button:disabled{opacity:.4;pointer-events:none}
+
+.status{font-size:13px;color:#aaa;text-align:center;min-height:20px;margin-bottom:6px}
+.status em{color:#ffd700;font-style:normal;font-weight:700}
+
+.grid-wrap{display:flex;justify-content:center;padding:0 4px;flex:1}
+.shell-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:clamp(4px,1.5vw,10px);
+    width:min(90vw,460px);
+    align-content:start;
+}
+.shell-card{aspect-ratio:1;perspective:700px;cursor:pointer}
+.shell-card.flipped,.shell-card.matched{cursor:default}
+
+.shell-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .5s cubic-bezier(.4,0,.2,1);
+    transform-style:preserve-3d;
+}
+.shell-card.flipped .shell-inner{transform:rotateY(180deg)}
+
+.shell-front,.shell-back{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center
+}
+.shell-front{background:#1a1a2e;border:2px solid #333}
+.shell-front img{width:92%;height:92%;object-fit:contain}
+.shell-front:hover{border-color:#ffd700;box-shadow:0 0 16px rgba(255,215,0,.35)}
+
+.shell-back{transform:rotateY(180deg);background:#1a1a2e;border:2px solid #555}
+.shell-back img{width:90%;height:90%;object-fit:contain}
+
+.shell-card.matched .shell-back{
+    border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,.55);
+    animation:glow .7s ease-in-out infinite alternate
+}
+@keyframes glow{from{box-shadow:0 0 12px rgba(255,215,0,.3)}to{box-shadow:0 0 28px rgba(255,215,0,.8)}}
+
+.popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;justify-content:center;align-items:center;flex-direction:column}
+.popup.show{display:flex;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.popup-inner{max-width:340px;width:90%;text-align:center}
+.popup-inner img{width:100%;border-radius:16px}
+.popup-inner p{margin-top:10px;font-size:12px;color:#aaa}
+.popup-inner button{margin-top:14px;padding:10px 36px;font-size:15px;font-weight:700;border-radius:8px;border:none;background:#ffd700;color:#000;cursor:pointer}
+
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#333;color:#ffd700;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+.reset-btn{display:none;margin:12px 0 16px;padding:8px 20px;font-size:12px;border-radius:6px;border:1px solid #444;background:transparent;color:#888;cursor:pointer}
+.reset-btn:active{background:#1a1a1a;color:#fff}
+
+.spinner{display:none;width:24px;height:24px;border:3px solid #333;border-top-color:#ffd700;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
-<body class="bg-dark-900 text-gray-200 font-sans min-h-screen">
+<body>
 
-<!-- Background particles effect -->
-<div class="fixed inset-0 pointer-events-none z-0 opacity-10">
-  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-neon rounded-full blur-[120px]"></div>
-  <div class="absolute bottom-1/3 right-1/4 w-80 h-80 bg-gold rounded-full blur-[100px]"></div>
+<div class="header"><h1>Lucky Shell</h1></div>
+
+<div class="voucher-box">
+    <input type="text" id="voucherInput" placeholder="Voucher Code" maxlength="20" autocomplete="off">
+    <button id="spinBtn">SPIN</button>
+    <div class="spinner" id="spinner"></div>
 </div>
 
-<!-- Header -->
-<header class="relative z-10 border-b border-gray-800 bg-dark-800/80 backdrop-blur-sm">
-  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-neon to-green-700 flex items-center justify-center">
-        <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      </div>
-      <span class="text-xl font-bold tracking-wider text-white">WIN RATE<span class="text-neon"> SCANNER</span></span>
+<div class="status" id="status">Enter a voucher code to play</div>
+
+<div class="grid-wrap"><div class="shell-grid" id="shellGrid"></div></div>
+
+<button class="reset-btn" id="resetBtn">New Game</button>
+
+<div class="popup" id="popup">
+    <div class="popup-inner">
+        <img id="popupImg" src="" alt="">
+        <p>Screenshot &amp; Claim With Our Customer Service</p>
+        <button onclick="closePopup()">OK</button>
     </div>
-    <div class="hidden sm:flex items-center gap-2 text-xs text-gray-400">
-      <span class="w-2 h-2 rounded-full bg-neon blink-star"></span>
-      <span>Live RTP Tracking</span>
-    </div>
-  </div>
-</header>
+</div>
 
-<!-- Main Content -->
-<main class="relative z-10 max-w-6xl mx-auto px-4 py-8 sm:py-12">
-
-  <!-- Hero Section -->
-  <section class="text-center mb-10">
-    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-      <span class="text-white">Real-Time</span>
-      <span class="text-neon"> Win Rate </span>
-      <span class="text-white">Analyzer</span>
-    </h1>
-    <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
-      Scan your favorite online games and discover the highest RTP (Return to Player) rates across Mega888, 918Kiss, and Pussy888 platforms.
-    </p>
-  </section>
-
-  <!-- Scanner Input Card -->
-  <div class="max-w-xl mx-auto bg-dark-700 rounded-2xl border border-gray-700 p-6 sm:p-8 mb-10 scan-overlay relative overflow-hidden">
-    <div class="relative z-10">
-      <label class="block text-sm text-gray-300 mb-2 font-medium">Game Account / Player ID</label>
-      <input
-        id="player-id"
-        type="text"
-        class="w-full bg-dark-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon focus:ring-1 focus:ring-neon transition-all text-sm sm:text-base"
-      />
-
-      <!-- Platform Selector -->
-      <label class="block text-sm text-gray-300 mb-2 mt-5 font-medium">Select Platform</label>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <button class="platform-btn selected w-full py-2.5 px-3 rounded-lg border-2 border-gray-600 bg-dark-800 text-gray-300 text-xs sm:text-sm font-semibold tracking-wide hover:border-gray-500 transition-all" data-platform="mega888">
-          <span class="text-neon">&#9679;</span> Mega888
-        </button>
-        <button class="platform-btn w-full py-2.5 px-3 rounded-lg border-2 border-gray-600 bg-dark-800 text-gray-300 text-xs sm:text-sm font-semibold tracking-wide hover:border-gray-500 transition-all" data-platform="918kiss">
-          <span class="text-gold">&#9679;</span> 918Kiss
-        </button>
-        <button class="platform-btn w-full py-2.5 px-3 rounded-lg border-2 border-gray-600 bg-dark-800 text-gray-300 text-xs sm:text-sm font-semibold tracking-wide hover:border-gray-500 transition-all" data-platform="pussy888">
-          <span class="text-pink-400">&#9679;</span> Pussy888
-        </button>
-      </div>
-
-      <div class="flex items-start gap-3 mt-4">
-        <input
-          id="agree-checkbox"
-          type="checkbox"
-          class="mt-1 w-4 h-4 rounded border-gray-600 bg-dark-900 text-neon focus:ring-neon focus:ring-offset-0 cursor-pointer"
-        />
-        <label for="agree-checkbox" class="text-xs text-gray-400 leading-relaxed cursor-pointer select-none">
-          I agree to the <span class="text-neon underline cursor-pointer">Terms of Service</span> and <span class="text-neon underline cursor-pointer">Privacy Policy</span>
-        </label>
-      </div>
-
-      <button
-        id="scan-btn"
-        class="btn-play relative w-full mt-6 py-3 rounded-lg font-bold text-black text-sm sm:text-base tracking-wider transition-all duration-300 bg-gradient-to-r from-neon to-green-400 hover:from-green-300 hover:to-neon disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span id="scan-btn-text">START SCANNING</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Scan Overlay (Active during scanning) -->
-  <div id="scan-overlay" class="fixed inset-0 z-50 bg-dark-900/95 flex items-center justify-center">
-    <div class="text-center max-w-md mx-auto px-4">
-      <!-- Spinning ring -->
-      <div class="relative w-32 h-32 mx-auto mb-8">
-        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-neon animate-spin"></div>
-        <div class="absolute inset-2 rounded-full border-4 border-transparent border-t-gold animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
-        <div class="absolute inset-4 rounded-full border-4 border-transparent border-t-neon animate-spin" style="animation-duration: 0.8s;"></div>
-        <div class="absolute inset-0 flex items-center justify-center">
-          <span class="text-neon text-2xl font-mono font-bold" id="scan-percent">0%</span>
-        </div>
-      </div>
-
-      <!-- Progress bar -->
-      <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
-        <div id="progress-bar" class="h-full bg-gradient-to-r from-neon to-gold rounded-full progress-bar-fill" style="width: 0%;"></div>
-      </div>
-
-      <!-- Code rain effect text -->
-      <div id="code-rain" class="font-mono text-xs text-neon/60 h-16 overflow-hidden leading-relaxed">
-      </div>
-
-      <p class="text-gray-400 text-sm mt-3">Analyzing RTP data across multiple platforms...</p>
-    </div>
-  </div>
-
-  <!-- Results Section -->
-  <section id="results-section" class="hidden">
-    <div class="text-center mb-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Scan Results</h2>
-      <p class="text-gray-400 text-sm" id="results-subtitle"></p>
-    </div>
-
-    <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
-    </div>
-
-    <!-- Disclaimer -->
-    <div class="max-w-2xl mx-auto mt-10 text-center">
-      <div class="border border-gray-700 rounded-xl p-4 bg-dark-700/50">
-        <p class="text-gray-500 text-xs leading-relaxed">
-          <span class="text-gold font-bold">Disclaimer:</span> Scan results are for reference only. RTP values are randomly generated simulations and do not represent actual game outcomes. Please play responsibly. This site is not affiliated with any gaming platform.
-        </p>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- Toast Container -->
-<div id="toast-container" class="fixed bottom-8 left-1/2 z-[100] pointer-events-none"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ──────────────────────────────────────────────
-// Game Data — 3 platforms: Mega888 (161), 918Kiss (93), Pussy888 (107)
-// ──────────────────────────────────────────────
-const GAME_DATA = {
-  mega888: {
-    platform: 'Mega888',
-    color: 'text-neon',
-    border: 'border-neon/30',
-    bg: 'bg-neon/5',
-    games: [
-      'Ireland', 'Beast Of Wealth', 'Golden', 'Cash Vandal', 'Fruit Vs Candy',
-      'Wealth Treasure', 'Wolf Hunters', 'Sizzling Spins', 'Circus', 'Penguin City',
-      'Dr Fortuno', 'Orient Express', 'Midas', 'Dragonz', 'Big Chef',
-      'Blaze Of Ra', 'Sword Of Khans', 'Dolphin', 'Lucky Little Gods', 'Royal Masquerade',
-      'Lucky New Year', 'Fortune Charm', 'Stone Age', 'Golden Tour', 'Western Ranch Story',
-      'Money Fever', 'Treasure Island', 'Golden Tree', 'Ranch Story', 'Dragon Gold',
-      'Seaworld', '5 Dragons', 'Zhao Cai Jin Bao', 'Nian Nian You Yu', 'God Of Wealth',
-      'Panther Moon', 'Golden Slut', 'Aztec', 'Green Light', 'Amazon Jungle',
-      'Seasons Greetings', 'Enhanced Garden', 'Crystal Waters', 'Victory', 'Rally',
-      'Jin Qian Wa', 'Robin Hood', 'Sea Captain', 'Coyote Cash', 'T-Rex',
-      'Tripple Twister', 'Lucky Neko', 'Da Sixi', 'Cleo Patra', 'Highway',
-      'A Night Out', 'Striper Night', 'Shinning Stars', 'Cookie Pop', 'Monkey Slots',
-      'Samurai', 'Kimochi', 'Wildfox', 'Boyking Treasure', 'Spartan',
-      'Silver Bullet', 'Japan', 'Bonus Bears', 'Great China', 'Sparta',
-      'Water Margin', 'Feng Shen', 'Aladdin', '8 Ball Slots', 'Captain Treasure',
-      'Ocean King', 'Laura', 'African Wildlife', 'Alice', 'Fashion',
-      'Fairy Garden', 'Champions Of Rome', 'Sun Wukong', 'Top Gun', 'Lost Island',
-      'Emperor Gate', 'Agent 51', 'Jungle Spirit', 'Chinese New Year', 'Dwarfs Gone Wild',
-      'Magical Spin', 'Gold Rush', 'Fortune Panda', 'Clash Of The Beasts', 'Thai Paradise',
-      'Pirate Ship', 'Halloween Party', 'Fortune Fest', 'Football Carnival', 'Iceland',
-      'Irish Luck', 'The Discovery', 'Elven Magic', 'Dragon Strike', 'Dim Sum Prize',
-      'Mystical Dragons', 'Bog Shot', 'Dessert Gem', 'Narcos', 'Magic Shoppe',
-      'Paydirt', '5 Dragon', 'Great Blue', 'Six Acrobats', 'Big Win Cat',
-      'Santa', 'Reel Classic', 'Cherry Love', 'Indian Myth', 'Fortune Fireworks',
-      'Nitro', 'Amazing Thailand', 'Jingle Bells', 'Lucky Koi', 'Hotline',
-      'Lotus Legend', 'Pond Of Riches', 'Lucky Duck', 'Matsuri', 'Razor Sharks',
-      'Snow World', 'Conan', 'Caishen\'s Gold', 'The Good Life', 'Golden Monkey',
-      'Xmas Magic', 'Yin & Yang', 'Hanzo\'s Dojo', 'Caster Surprise', 'Legend Of The WhiteSnakeLady',
-      'Temple Of Wealth', 'Cleopatras', 'Celebration Of Wealth', 'Lights', 'Juan',
-      'Jackpot Raiders', 'House Doom', 'Dragon Maiden', 'Manic Millions', 'Robin Of Sherwood',
-      'Masquerade', 'Dark Vortex', 'Golden Colts', 'Lions Dance', 'Temple Quest',
-      'Great88', 'Raging Rex'
-    ]
-  },
-  '918kiss': {
-    platform: '918Kiss',
-    color: 'text-gold',
-    border: 'border-gold/30',
-    bg: 'bg-gold/5',
-    games: [
-      'Zhao Cai Jin Bao', 'Sun Wukong', 'Wong Choy', 'Witch', 'Wildfox',
-      'Western Ranch', 'Wealth', 'Water Margin', 'Amazon', 'Captain',
-      'Victory', 'Twister', 'Treasure Island', 'Top Gun', 'Three Kingdom',
-      'The Discovery', 'Thai', 'Tally Ho', 'Big Shot', 'Cleopatra',
-      'T-Rex', 'Spartan', 'Sparta', 'Silver', 'Seasons',
-      'Seaworld', 'Sea Captain', 'Boyking', 'Crazy7', 'Samurai',
-      'Safari Heat', 'Robin Hood', 'Shinning Stars', 'Reel Classic', 'Rally',
-      'Ranch Story', 'Prosperity', 'Circus', 'Dragon', 'Pirate',
-      'Paydirt', 'Panther Moon', 'Panda', 'Panjinlian', 'Orient',
-      'OceanParadise', 'Nian Nian You Yu', 'Coyote Cash', 'Bonus Bears', 'Monkey Slots',
-      'Money Fever', 'Magical Spin', 'Laura', 'Kimochi', 'Jin Qian Wa',
-      'Japan', 'Irish Luck', 'Dolphin Reef', 'Aztec', 'India',
-      'Iceland', 'Highway', 'Halloween Party', 'Green Light', 'Great Stars',
-      'Great Blue', 'Golden Tree', 'A Night Out', 'African Wildlife', 'Golden Tour',
-      'Golden Slut', 'Golden Lotus', 'God Of Wealth', 'Girls', 'Garden',
-      'Fortune Panda', '5 Fortune', 'Easter', 'Aladdin', 'FootBall',
-      'Five Dragon', 'Feng Shen', 'Fashion', 'Fame', 'Fairy Garden',
-      'Emperorgate', 'Alice', 'Ball Slots', 'Boxing', 'Dragon Gold',
-      'Crystal', 'Cookie Pop', 'Cherry Love'
-    ]
-  },
-  pussy888: {
-    platform: 'Pussy888',
-    color: 'text-pink-400',
-    border: 'border-pink-400/30',
-    bg: 'bg-pink-400/5',
-    games: [
-      'Dolphin Reef', 'Archer', 'Great Blue', 'Golden Tour', 'Highway',
-      'Halloween Fortune', 'Yun Cong Long', 'Captain Treasure', 'Buffalo Blitz', 'Caster Surprise',
-      'Halloween Party', 'Cherry Love', 'Lucky Panda', 'Tiger Glory', 'Neptune Treasure',
-      'Fortune Lions', 'Cac Queen', 'White King', 'Magical Spin', 'Top Gun',
-      'Primal', 'Beast The Beasts', 'Big Prosperity', 'Great Rhino', 'Midas',
-      'Jin Qian Wa', 'Panther Moon', 'Bonus Bears', 'Zhao Cai Jin Bao', 'Yu Huang Da Di',
-      '5 Dragons', 'Dragons', 'Boyking Treasure', 'Seaworld', 'Rome & Glory',
-      'Sparta', 'Sea Captain', 'Stone Age', 'Iceland', 'Green Light',
-      'Land Gold', 'King Of Olympus', 'Epic Ape', 'Treasure Queen', 'Crystal Waters',
-      'Safari Heat', 'Penguin Vocation', 'Tiger Claw', 'Paydirt', 'Orient Express',
-      'WarriorsGold', 'Triple Twister', 'T-Rex', 'Fairy Garden', 'Pirate Ship',
-      'Treasure Island', 'Circus', 'Geishas Garden', 'Football', 'Cookie Pop',
-      'Western Ranch Story', 'Ranch Story', 'Si Xiang', 'Shinning Stars', 'Seasons Greetings',
-      'Zhao Cai Tong Zi', 'Fei Long Zai Tian', 'The Discovery', 'Big Shot', 'Wealth Treasure',
-      'Banana Monkey', 'Aladdin', 'Lie Yan Zuan Shi', 'Money Fever', 'Nian Nian You Yu',
-      'Fairy Garden Plus', 'Aztec Treasure', 'Santra Surprise', 'Alice', 'Feng Shen',
-      'Three Kingdom', 'Dolphin', 'Robin Hood', 'Japan', 'Golden Slut',
-      'Amazon Jungle', 'Spartan', 'Great Star', 'Fortune Panda', 'Irish Luck',
-      'Laura', 'Victory', 'Tally Ho', 'Dragon Gold', 'Fortune',
-      'Wong Choy', 'Golden Lotus', 'Pirate', 'Xin Pan Jin Lian', 'Kimochi',
-      'African Wildlife', 'Emperorgate', 'Great China', 'Wild Foz', 'Thai Paradise',
-      'Indian Myth', 'Amazing Thailand', 'Striper Night'
-    ]
-  }
-};
+// Use the same checkin server which now includes voucher API endpoints
+const API = window.parent !== window ? 
+    (window.parent.location.origin || 'https://checkin-system-dok2.onrender.com') : 
+    (window.location.origin || 'https://checkin-system-dok2.onrender.com');
+const PRIZES=[8,18,28,38,68,88,188,288,388];
+const TOTAL=16;
+let targetPrize=null,shells=[],flipped=[],counts={},active=false,won=false,currentCode='';
 
-// ──────────────────────────────────────────────
-// Utilities
-// ──────────────────────────────────────────────
-function randomRTP() {
-  return (Math.random() * 14 + 85).toFixed(1); // 85.0 – 99.0
+const vin=document.getElementById('voucherInput'),spinBtn=document.getElementById('spinBtn');
+const statusEl=document.getElementById('status'),gridEl=document.getElementById('shellGrid');
+const popup=document.getElementById('popup'),popupImg=document.getElementById('popupImg');
+const toast=document.getElementById('toast'),resetBtn=document.getElementById('resetBtn');
+const spinner=document.getElementById('spinner');
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+
+function show(m){toast.textContent=m;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2200)}
+function loading(on){spinBtn.disabled=on;spinner.style.display=on?'block':'none';vin.disabled=on}
+
+function generateShells(target){
+    const others=PRIZES.filter(p=>p!==target);
+    let r=[];for(let i=0;i<3;i++)r.push(target);
+    let f=others.slice();shuffle(others);
+    for(let i=0;i<5;i++)f.push(others[i]);
+    shuffle(f);r=r.concat(f);shuffle(r);return r;
 }
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function showToast(message) {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast bg-dark-700 border border-gray-600 text-white text-sm px-5 py-3 rounded-lg shadow-2xl whitespace-nowrap';
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add('hide');
-    toast.addEventListener('animationend', () => toast.remove());
-  }, 2500);
-}
-
-// ──────────────────────────────────────────────
-// Code Rain Effect inside scan overlay
-// ──────────────────────────────────────────────
-const codeChars = '01ABCDEFabcdef';
-let codeRainInterval = null;
-
-function startCodeRain() {
-  const el = document.getElementById('code-rain');
-  function tick() {
-    const lines = [];
-    for (let i = 0; i < 5; i++) {
-      let line = '';
-      const len = randomInt(20, 45);
-      for (let j = 0; j < len; j++) {
-        line += codeChars[randomInt(0, codeChars.length - 1)];
-        if (randomInt(0, 4) === 0) line += ' ';
-      }
-      lines.push(line);
+function renderGrid(){
+    gridEl.innerHTML='';
+    for(let i=0;i<TOTAL;i++){
+        const c=document.createElement('div');c.className='shell-card';c.dataset.i=i;
+        c.innerHTML=`<div class="shell-inner"><div class="shell-front"><img src="img/原图.png" alt=""></div><div class="shell-back"><img src="img/RM${shells[i]}奖励贝壳.png" alt=""></div></div>`;
+        c.addEventListener('click',()=>flip(i));gridEl.appendChild(c);
     }
-    el.innerHTML = lines.join('<br>');
-  }
-  tick();
-  codeRainInterval = setInterval(tick, 150);
 }
 
-function stopCodeRain() {
-  if (codeRainInterval) {
-    clearInterval(codeRainInterval);
-    codeRainInterval = null;
-  }
-}
+function flip(i){
+    if(!active||won||flipped[i])return;
+    flipped[i]=true;const p=shells[i];
+    counts[p]=(counts[p]||0)+1;
+    gridEl.children[i].classList.add('flipped');
+    const fc=flipped.filter(Boolean).length;
+    statusEl.innerHTML=`Flipped: <em>${fc}</em>/${TOTAL}`;
 
-// ──────────────────────────────────────────────
-// Scan Logic
-// ──────────────────────────────────────────────
-function startScan(playerId, platformKey) {
-  const overlay = document.getElementById('scan-overlay');
-  const progressBar = document.getElementById('progress-bar');
-  const percentEl = document.getElementById('scan-percent');
-  const resultsSection = document.getElementById('results-section');
-  const scanBtn = document.getElementById('scan-btn');
-  const scanBtnText = document.getElementById('scan-btn-text');
-
-  // Hide previous results
-  resultsSection.classList.add('hidden');
-
-  // Show overlay
-  overlay.classList.add('active');
-  scanBtn.disabled = true;
-  scanBtnText.textContent = 'SCANNING...';
-
-  // Reset
-  progressBar.style.width = '0%';
-  percentEl.textContent = '0%';
-  startCodeRain();
-
-  // Simulate progress over ~4 seconds
-  const duration = 4000; // ms
-  const steps = 40;
-  const stepTime = duration / steps;
-  let step = 0;
-
-  const progressTimer = setInterval(() => {
-    step++;
-    const pct = Math.min(step * (100 / steps), 99);
-    progressBar.style.width = pct + '%';
-    percentEl.textContent = Math.floor(pct) + '%';
-
-    if (step >= steps) {
-      clearInterval(progressTimer);
-      // Final jump to 100%
-      progressBar.style.width = '100%';
-      percentEl.textContent = '100%';
-
-      // Small delay then show results
-      setTimeout(() => {
-        stopCodeRain();
-        overlay.classList.remove('active');
-        scanBtn.disabled = false;
-        scanBtnText.textContent = 'START SCANNING';
-        showResults(playerId, platformKey);
-      }, 400);
+    for(let[k,v]of Object.entries(counts)){
+        if(v>=3){won=true;active=false;
+            const wp=parseInt(k);
+            for(let j=0;j<TOTAL;j++)if(shells[j]===wp)gridEl.children[j].classList.add('matched');
+            fetch(`${API}/api/voucher/mark_used`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:currentCode})});
+            setTimeout(()=>showPopup(wp),800);return;
+        }
     }
-  }, stepTime);
 }
 
-// ──────────────────────────────────────────────
-// Results Generation
-// ──────────────────────────────────────────────
-function showResults(playerId, platformKey) {
-  const grid = document.getElementById('results-grid');
-  const section = document.getElementById('results-section');
-  const subtitle = document.getElementById('results-subtitle');
+function showPopup(p){popupImg.src=`img/RM${p}Popup贝壳.gif`;popup.classList.add('show');statusEl.innerHTML=`Won <em>RM${p}</em>! Screenshot & claim.`}
+function closePopup(){popup.classList.remove('show')}
 
-  const playerLabel = playerId.trim() || 'Player';
-  const platform = GAME_DATA[platformKey];
-  subtitle.textContent = `RTP analysis for "${playerLabel}" — ${platform.platform} top performing games this session`;
-
-  // Pick 3–5 random games from the selected platform only
-  const gameCount = randomInt(3, Math.min(5, platform.games.length));
-  const picked = shuffle(platform.games).slice(0, gameCount);
-
-  const cards = picked.map(gameName => ({
-    platform: platform.platform,
-    platformKey: platformKey,
-    color: platform.color,
-    border: platform.border,
-    bg: platform.bg,
-    game: gameName,
-    rtp: randomRTP()
-  }));
-
-  // Shuffle and render
-  const finalCards = shuffle(cards);
-
-  // Render
-  grid.innerHTML = '';
-  finalCards.forEach((card, i) => {
-    const rtpColor = parseFloat(card.rtp) >= 95 ? 'text-neon' : parseFloat(card.rtp) >= 90 ? 'text-gold' : 'text-orange-400';
-    const cardHTML = `
-      <div class="card-enter bg-dark-700 border ${card.border} rounded-xl p-5 hover:border-opacity-60 transition-all duration-300 hover:scale-[1.02] ${card.bg}" style="animation-delay: ${i * 0.1}s;">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-dark-900 ${card.color} border ${card.border}">
-            ${card.platform}
-          </span>
-          <span class="text-xs text-gray-500">RTP</span>
-        </div>
-        <h3 class="text-white font-semibold text-lg mb-1 truncate">${card.game}</h3>
-        <div class="flex items-baseline gap-1 mb-4">
-          <span class="text-3xl font-bold ${rtpColor}">${card.rtp}%</span>
-        </div>
-        <div class="w-full bg-gray-800 rounded-full h-2 mb-4 overflow-hidden">
-          <div class="h-full rounded-full bg-gradient-to-r from-neon to-gold transition-all duration-1000" style="width: ${card.rtp}%;"></div>
-        </div>
-        <button
-          class="btn-play relative w-full py-2.5 rounded-lg font-bold text-black text-sm tracking-wide transition-all duration-300 bg-gradient-to-r from-amber-400 to-gold hover:from-gold hover:to-amber-300"
-          onclick="window.open('https://wa.me/601121376253', '_blank')"
-        >
-          PLAY NOW
-          <span class="ml-1 blink-star">&#9733;</span>
-        </button>
-      </div>
-    `;
-    grid.insertAdjacentHTML('beforeend', cardHTML);
-  });
-
-  section.classList.remove('hidden');
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+async function validateVoucher(code){
+    const res=await fetch(`${API}/api/voucher/validate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    return res.json();
 }
 
-// ──────────────────────────────────────────────
-// Platform ID Validation Rules
-// ──────────────────────────────────────────────
-const PLATFORM_RULES = {
-  mega888: {
-    regex: /^09\d{10}$/,
-    placeholder: '09xxxxxxxxxx (12 digits, starts with 09)',
-    maxlength: 12,
-    errorMsg: 'Mega888 ID 必须以 09 开头，共 12 位数字'
-  },
-  '918kiss': {
-    regex: /^01\d{9}$/,
-    placeholder: '01xxxxxxxxx (11 digits, starts with 01)',
-    maxlength: 11,
-    errorMsg: '918Kiss ID 必须以 01 开头，共 11 位数字'
-  },
-  pussy888: {
-    regex: /^my\d{9}$/,
-    placeholder: 'myxxxxxxxxx (starts with "my" + 9 digits)',
-    maxlength: 11,
-    errorMsg: 'Pussy888 ID 必须以 my 开头，后跟 9 位数字'
-  }
-};
-
-// ──────────────────────────────────────────────
-// Event Listeners
-// ──────────────────────────────────────────────
-
-const playerIdInput = document.getElementById('player-id');
-
-// Platform selector
-let selectedPlatform = 'mega888';
-
-function applyPlatformRules(platformKey) {
-  const rules = PLATFORM_RULES[platformKey];
-  playerIdInput.placeholder = rules.placeholder;
-  playerIdInput.maxLength = rules.maxlength;
-  playerIdInput.value = '';
+function startGame(code,prize){
+    targetPrize=prize;currentCode=code;
+    shells=generateShells(targetPrize);
+    flipped=new Array(TOTAL).fill(false);counts={};active=true;won=false;
+    renderGrid();
+    statusEl.innerHTML=`Target: <em>RM${targetPrize}</em> &mdash; Find 3 matching shells!`;
+    resetBtn.style.display='inline-block';
+    vin.value='';loading(true);
 }
 
-// Init on page load
-applyPlatformRules('mega888');
-
-document.querySelectorAll('.platform-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedPlatform = btn.dataset.platform;
-    applyPlatformRules(selectedPlatform);
-  });
+spinBtn.addEventListener('click',async()=>{
+    const code=vin.value.trim().toUpperCase();
+    if(!code){show('Enter a voucher code');return}
+    loading(true);
+    try{
+        const r=await validateVoucher(code);
+        if(!r.ok){show(r.message);loading(false);return}
+        startGame(code,r.prize);
+    }catch(e){show('Server error. Is backend running?');loading(false)}
 });
+vin.addEventListener('keydown',e=>{if(e.key==='Enter')spinBtn.click()});
 
-document.getElementById('scan-btn').addEventListener('click', () => {
-  const playerId = playerIdInput.value;
-  const agreed = document.getElementById('agree-checkbox').checked;
-
-  if (!agreed) {
-    showToast('Please agree to the Terms of Service and Privacy Policy before scanning.');
-    return;
-  }
-
-  if (!playerId.trim()) {
-    showToast('Please enter your game ID to begin scanning.');
-    return;
-  }
-
-  if (!selectedPlatform) {
-    showToast('Please select a game platform.');
-    return;
-  }
-
-  // Validate ID format
-  const rules = PLATFORM_RULES[selectedPlatform];
-  if (!rules.regex.test(playerId.trim())) {
-    showToast(rules.errorMsg);
-    return;
-  }
-
-  startScan(playerId, selectedPlatform);
-});
-
-// Enter key support
-document.getElementById('player-id').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    document.getElementById('scan-btn').click();
-  }
+resetBtn.addEventListener('click',()=>{
+    shells=[];flipped=[];counts={};active=false;won=false;targetPrize=null;currentCode='';
+    gridEl.innerHTML='';statusEl.innerHTML='Enter a voucher code to play';
+    resetBtn.style.display='none';loading(false);vin.focus();
+    closePopup();
 });
 </script>
-
 </body>
 </html>

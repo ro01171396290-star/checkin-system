@@ -536,7 +536,8 @@ let appState = {
   streakDay: 0,
   milestonesClaimed: { day7: 0, day14: 0, day21: 0, day30: 0 },
   history: [],
-  lastDate: null
+  lastDate: null,
+  streakBroken: false
 };
 
 async function loadState() {
@@ -549,6 +550,19 @@ async function loadState() {
     appState.milestonesClaimed = data.milestonesClaimed;
     appState.history = data.history || [];
     appState.lastDate = data.lastDate;
+
+    // Client-side broken streak detection
+    if (appState.lastDate && !appState.checkedToday) {
+      const last = new Date(appState.lastDate + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffDays = Math.floor((today - last) / 86400000);
+      if (diffDays > 1) {
+        appState.streakBroken = true;
+        appState.totalDays = 0;
+        appState.streakDay = 0;
+      }
+    }
   } catch (e) {
     console.error('Failed to load state:', e);
   }
@@ -571,6 +585,7 @@ async function doCheckin() {
     appState.checkedToday = data.checkedToday;
     appState.streakDay = data.streakDay;
     appState.totalDays = data.totalDays;
+    appState.streakBroken = false;
     appState.lastDate = new Date().toISOString().slice(0, 10);
     if (!appState.history.includes(appState.lastDate)) {
       appState.history.push(appState.lastDate);
@@ -629,9 +644,15 @@ function updateUI() {
   const labels = ['Day 7','Day 14','Day 21','Day 30'];
 
   document.getElementById('dayNum').textContent = displayDay;
+  document.getElementById('daySub').textContent = displayDay === 0 ? 'streak broken' : 'days';
 
   // Progress bar
   document.getElementById('progressBar').style.width = (displayDay / 30 * 100) + '%';
+
+  // Show broken streak message
+  if (appState.streakBroken && !appState.checkedToday) {
+    showStatus('Streak broken. Sign in to start a new streak!', 'broken');
+  }
 
   // 30-Day Grid
   const grid = document.getElementById('dayGrid');
