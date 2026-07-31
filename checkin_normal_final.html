@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -370,14 +370,14 @@ body {
   </div>
   </div><!-- /tabRewards -->
 
-  <!-- Tab: Slot Win Rate -->
+  <!-- Tab: Lucky Shell -->
   <div class="tab-page" id="tabSlot" style="display:none">
     <iframe id="slotFrame" src="slot.html" style="width:100%;height:100%;border:none;position:absolute;top:0;left:0;"></iframe>
   </div><!-- /tabSlot -->
 
   <div class="bottom-nav">
-    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">🎁</span>Rewards</div>
-    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">🎰</span>Slot Win Rate</div>
+    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">??</span>Rewards</div>
+    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">??</span>Lucky Shell</div>
   </div>
 </div>
 
@@ -417,7 +417,7 @@ let token, user;
 let S = {
   appTitle: 'CheckIn', gridTitle: 'Daily Random RM8 ~ RM388',
   claimText: 'Pls Screenshot To Claim', comeBackText: 'Come back tomorrow for Day {day}!',
-  tabRewards: 'Rewards', tabSlot: 'Slot Win Rate',
+  tabRewards: 'Rewards', tabSlot: 'Lucky Shell',
   rewardGifs: {7:'day7.gif',14:'day14.gif',21:'day21.gif',30:'day30.gif'},
   dailyGif: 'daily.gif', rewardBg: 'reward_bg.png',
   slotUrl: 'slot.html',
@@ -457,8 +457,8 @@ function applySettings() {
   document.title = S.appTitle;
   var el = document.querySelector('.app-title'); if (el) el.textContent = S.appTitle;
   el = document.getElementById('gridTitle'); if (el) el.textContent = S.gridTitle;
-  el = document.getElementById('navRewards'); if (el) el.innerHTML = '<span class="nav-icon">🎁</span>' + S.tabRewards;
-  el = document.getElementById('navSlot'); if (el) el.innerHTML = '<span class="nav-icon">🎰</span>' + S.tabSlot;
+  el = document.getElementById('navRewards'); if (el) el.innerHTML = '<span class="nav-icon">??</span>' + S.tabRewards;
+  el = document.getElementById('navSlot'); if (el) el.innerHTML = '<span class="nav-icon">??</span>' + S.tabSlot;
   el = document.getElementById('slotFrame'); if (el) el.src = S.slotUrl;
   document.querySelectorAll('.daily-claim-text').forEach(function(e) { e.textContent = S.claimText; });
   el = document.querySelector('.daily-gif'); if (el) el.src = S.dailyGif;
@@ -684,7 +684,7 @@ function updateUI() {
     if (milestoneDays.includes(i)) {
       const badge = document.createElement('span');
       badge.className = 'badge';
-      badge.textContent = appState.milestonesClaimed['day' + i] ? '✓' : '⭐';
+      badge.textContent = appState.milestonesClaimed['day' + i] ? '?' : '?';
       div.appendChild(badge);
     }
 
@@ -710,7 +710,7 @@ function updateUI() {
 
     const reward = document.createElement('div');
     reward.className = 'ms-reward';
-    reward.textContent = appState.milestonesClaimed['day' + m] ? '✓ Bonus' : 'Bonus';
+    reward.textContent = appState.milestonesClaimed['day' + m] ? '? Bonus' : 'Bonus';
 
     card.appendChild(icon);
     card.appendChild(dayEl);
