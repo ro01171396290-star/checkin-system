@@ -196,7 +196,8 @@ initDB().then(() => {
       if (ms.length > 0) { await exec(`UPDATE users SET total_days = total_days + 1, day${ms[0]} = 1 WHERE id = ?`, [req.userId]); newMilestone = ms[0]; }
       else { await exec('UPDATE users SET total_days = total_days + 1 WHERE id = ?', [req.userId]); }
     }
-    res.json({ success: true, streakDay, newMilestone, checkedToday: true });
+    const totalDays = streakDay === 1 ? 1 : user.total_days + 1;
+    res.json({ success: true, streakDay, totalDays, newMilestone, checkedToday: true });
   });
 
   app.post('/api/checkin-test', authMiddleware, async (req, res) => {

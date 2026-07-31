@@ -544,10 +544,10 @@ async function loadState() {
   try {
     const data = await apiGet('/api/checkin/status');
     if (!data.success) return;
-    appState.totalDays = data.totalDays;
+    appState.totalDays = data.totalDays || 0;
     appState.checkedToday = data.checkedToday;
-    appState.streakDay = data.streakDay;
-    appState.milestonesClaimed = data.milestonesClaimed;
+    appState.streakDay = data.streakDay || 0;
+    appState.milestonesClaimed = data.milestonesClaimed || { day7: 0, day14: 0, day21: 0, day30: 0 };
     appState.history = data.history || [];
     appState.lastDate = data.lastDate;
 
@@ -584,7 +584,7 @@ async function doCheckin() {
 
     appState.checkedToday = data.checkedToday;
     appState.streakDay = data.streakDay;
-    appState.totalDays = data.totalDays;
+    appState.totalDays = data.totalDays || appState.totalDays;
     appState.streakBroken = false;
     appState.lastDate = new Date().toISOString().slice(0, 10);
     if (!appState.history.includes(appState.lastDate)) {
@@ -607,7 +607,7 @@ async function doCheckin() {
 
 function closeDailyPopup() {
   document.getElementById('dailyOverlay').classList.remove('show');
-  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const displayDay = (appState.totalDays || 0) === 0 ? 0 : (((appState.totalDays || 0) - 1) % 30) + 1;
   const nextDay = displayDay % 30 + 1;
   showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
@@ -622,7 +622,7 @@ function showReward(day) {
 
 function claimReward() {
   document.getElementById('rewardOverlay').classList.remove('show');
-  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
+  const displayDay = (appState.totalDays || 0) === 0 ? 0 : (((appState.totalDays || 0) - 1) % 30) + 1;
   const nextDay = displayDay % 30 + 1;
   showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
@@ -637,7 +637,7 @@ function showStatus(msg, cls) {
 // ========== UI ==========
 function updateUI() {
   const streak = appState.streakDay;
-  const totalDays = appState.totalDays;
+  const totalDays = appState.totalDays || 0;
   const displayDay = totalDays === 0 ? 0 : ((totalDays - 1) % 30) + 1;
   const milestoneDays = [7, 14, 21, 30];
   const icons = [S.rewardGifs[7], S.rewardGifs[14], S.rewardGifs[21], S.rewardGifs[30]];
