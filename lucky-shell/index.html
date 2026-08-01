@@ -116,7 +116,7 @@ body{
 <div class="toast" id="toast"></div>
 
 <script>
-const API = window.API_BASE || '';
+const API = 'https://checkin-system-dok2.onrender.com';
 const PRIZES=[8,18,28,38,68,88,188,288,388];
 const TOTAL=16;
 let targetPrize=null,shells=[],flipped=[],counts={},active=false,won=false,currentCode='';
@@ -193,7 +193,7 @@ spinBtn.addEventListener('click',async()=>{
         const r=await validateVoucher(code);
         if(!r.ok){show(r.message);loading(false);return}
         startGame(code,r.prize);
-    }catch(e){show('Server error. Is backend running?');loading(false)}
+    }catch(e){show('Error: '+(e.message||JSON.stringify(e)));loading(false)}
 });
 vin.addEventListener('keydown',e=>{if(e.key==='Enter')spinBtn.click()});
 
