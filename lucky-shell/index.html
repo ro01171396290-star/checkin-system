@@ -73,7 +73,7 @@ body{
 }
 @keyframes glow{from{filter:drop-shadow(0 0 8px rgba(255,215,0,.4))}to{filter:drop-shadow(0 0 22px rgba(255,215,0,.9))}}
 
-.popup{display:none;position:fixed;inset:0;background:transparent;z-index:1000;justify-content:center;align-items:center;flex-direction:column;pointer-events:none}
+.popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column}
 .popup.show{display:flex;animation:fadeIn .3s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .popup-inner{max-width:340px;width:90%;text-align:center}
