@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-    background:#0a0a0a;font-family:'Segoe UI',Arial,sans-serif;
+    background:#0a0a0a url('/img/bg.png') center/contain no-repeat fixed;font-family:'Segoe UI',Arial,sans-serif;
     min-height:100dvh;display:flex;flex-direction:column;align-items:center;
     color:#fff;overflow-x:hidden;-webkit-tap-highlight-color:transparent;
     user-select:none;-webkit-user-select:none;
@@ -19,11 +19,11 @@ body{
 .header{text-align:center;padding:8px 12px 2px}
 .header h1{font-size:clamp(20px,5vw,28px);font-weight:900;letter-spacing:1px;color:#ffd700}
 
-.voucher-box{display:flex;align-items:center;gap:8px;margin:6px 0 10px;flex-wrap:wrap;justify-content:center}
+.voucher-box{display:flex;align-items:center;gap:8px;margin:6px 0 10px;flex-wrap:wrap;justify-content:center;transform:translateZ(0);will-change:transform}
 .voucher-box input{
     padding:10px 14px;font-size:15px;border-radius:8px;border:2px solid #333;
     background:#1a1a1a;color:#ffd700;outline:none;width:180px;text-align:center;
-    letter-spacing:2px;text-transform:uppercase;
+    letter-spacing:2px;
 }
 .voucher-box input:focus{border-color:#ffd700}
 .voucher-box button{
@@ -43,6 +43,7 @@ body{
     width:min(90vw,460px);
     align-content:start;
     perspective:700px;
+    contain:layout style paint;
 }
 .shell-card{aspect-ratio:1;cursor:pointer}
 .shell-card.flipped,.shell-card.matched{cursor:default}
@@ -72,7 +73,7 @@ body{
 }
 @keyframes glow{from{filter:drop-shadow(0 0 8px rgba(255,215,0,.4))}to{filter:drop-shadow(0 0 22px rgba(255,215,0,.9))}}
 
-.popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;justify-content:center;align-items:center;flex-direction:column}
+.popup{display:none;position:fixed;inset:0;background:transparent;z-index:1000;justify-content:center;align-items:center;flex-direction:column;pointer-events:none}
 .popup.show{display:flex;animation:fadeIn .3s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .popup-inner{max-width:340px;width:90%;text-align:center}
@@ -105,7 +106,7 @@ body{
 
 <div class="grid-wrap"><div class="shell-grid" id="shellGrid"></div></div>
 
-<button class="reset-btn" id="resetBtn">New Game</button>
+
 
 <div class="popup" id="popup">
     <div class="popup-inner">
@@ -169,7 +170,7 @@ function flip(i){
     }
 }
 
-function showPopup(p){popupImg.src=`img/RM${p}奖励贝壳.png`;popup.classList.add('show');statusEl.innerHTML=`Won <em>RM${p}</em>! Screenshot & claim.`}
+function showPopup(p){popupImg.src=`img/RM${p}Popup贝壳.gif`;popup.classList.add('show');statusEl.innerHTML=`Won <em>RM${p}</em>! Screenshot & claim.`}
 function closePopup(){popup.classList.remove('show')}
 
 async function validateVoucher(code){
@@ -182,7 +183,7 @@ function startGame(code,prize){
     shells=generateShells(targetPrize);
     flipped=new Array(TOTAL).fill(false);counts={};active=true;won=false;
     renderGrid();
-    statusEl.innerHTML=`Target: <em>RM${targetPrize}</em> &mdash; Find 3 matching shells!`;
+    statusEl.innerHTML=`Find 3 matching shells!`;
     resetBtn.style.display='inline-block';
     vin.value='';loading(true);
 }
@@ -198,6 +199,7 @@ spinBtn.addEventListener('click',async()=>{
     }catch(e){show('Server error. Is backend running?');loading(false)}
 });
 vin.addEventListener('keydown',e=>{if(e.key==='Enter')spinBtn.click()});
+vin.addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase()});
 
 resetBtn.addEventListener('click',()=>{
     shells=[];flipped=[];counts={};active=false;won=false;targetPrize=null;currentCode='';

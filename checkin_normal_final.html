@@ -1,10 +1,23 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CheckIn</title>
+<title>CheckIn Test</title>
 <style>
+:root {
+  --primary: #6c5ce7;
+  --primary-light: #a29bfe;
+  --primary-dark: #5a4bd1;
+  --bg-phone: #0f0f1a;
+  --bg-card: #151525;
+  --bg-nav: #1a1a2e;
+  --bg-dark: #1e1e32;
+  --gold: #f9ca24;
+  --success: #00cec9;
+  --phone-radius: 36px;
+  --card-radius: 14px;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   background: #1a1a2e;
@@ -13,19 +26,26 @@ body {
 }
 .phone {
   width: 390px; min-height: 780px;
-  background: #0f0f1a;
-  border-radius: 36px;
+  background: var(--bg-phone);
+  border-radius: var(--phone-radius);
   padding: 18px 16px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.tab-page {
+  flex: 1;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  min-height: 0;
 }
 .phone-bg {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background-size: cover; background-position: center;
   background-repeat: no-repeat;
-  border-radius: 36px; z-index: 0; pointer-events: none;
+  border-radius: var(--phone-radius); z-index: 0; pointer-events: none;
   opacity: 0.25;
 }
 
@@ -57,7 +77,7 @@ body {
   padding: 4px 12px; border-radius: 8px; font-size: 11px;
   cursor: pointer; transition: all 0.2s;
 }
-.logout-btn:hover { border-color: #6c5ce7; color: #a29bfe; }
+.logout-btn:hover { border-color: var(--primary); color: var(--primary-light); }
 
 /* Day Counter */
 .day-counter { text-align: center; padding: 4px 0; }
@@ -74,7 +94,7 @@ body {
 
 /* ======= 30-Day Grid ======= */
 .grid-section {
-  background: #151525; border-radius: 16px;
+  background: var(--bg-card); border-radius: 16px;
   padding: 14px 12px; margin: 12px 0;
 }
 .grid-header {
@@ -90,9 +110,9 @@ body {
 .legend-dot {
   width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 4px;
 }
-.legend-dot.done { background: #6c5ce7; }
-.legend-dot.pending { background: #1e1e32; border: 1px solid #333; }
-.legend-dot.milestone { background: #1e1e32; border: 1.5px solid #f9ca24; }
+.legend-dot.done { background: var(--primary); }
+.legend-dot.pending { background: var(--bg-dark); border: 1px solid #333; }
+.legend-dot.milestone { background: var(--bg-dark); border: 1.5px solid var(--gold); }
 
 .day-grid {
   display: grid;
@@ -109,19 +129,19 @@ body {
   position: relative;
 }
 .grid-day.done {
-  background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
   box-shadow: 0 2px 8px rgba(108,92,231,0.3);
 }
 .grid-day.pending {
-  background: #1a1a2e; color: #444;
+  background: var(--bg-nav); color: #444;
   border: 1px solid #1f1f33;
 }
 .grid-day.milestone-marker {
-  border: 1.5px solid #f9ca24 !important;
+  border: 1.5px solid var(--gold) !important;
 }
 .grid-day.today {
-  border: 1.5px solid #a29bfe !important;
+  border: 1.5px solid var(--primary-light) !important;
   animation: todayPulse 2s infinite;
 }
 @keyframes todayPulse {
@@ -135,11 +155,11 @@ body {
 
 /* ======= Progress bar ======= */
 .progress-bar-bg {
-  height: 6px; background: #1e1e32; border-radius: 3px;
+  height: 6px; background: var(--bg-dark); border-radius: 3px;
   overflow: hidden; margin: 8px 0 12px;
 }
 .progress-bar-fill {
-  height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+  height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));
   border-radius: 3px; transition: width 0.5s ease;
 }
 
@@ -149,12 +169,12 @@ body {
   margin: 10px 0;
 }
 .ms-card {
-  background: #151525; border-radius: 14px; padding: 12px 6px;
+  background: var(--bg-card); border-radius: var(--card-radius); padding: 12px 6px;
   text-align: center; transition: all 0.3s;
   border: 1.5px solid transparent;
 }
 .ms-card.achieved {
-  background: #1a1530; border-color: #6c5ce7;
+  background: #1a1530; border-color: var(--primary);
   box-shadow: 0 0 20px rgba(108,92,231,0.15);
 }
 .ms-card .ms-icon { width: 36px; height: 36px; object-fit: contain; margin-bottom: 4px; }
@@ -162,7 +182,7 @@ body {
   font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px;
 }
 .ms-card .ms-reward { font-size: 10px; color: #555; }
-.ms-card.achieved .ms-reward { color: #a29bfe; }
+.ms-card.achieved .ms-reward { color: var(--primary-light); }
 
 /* ======= Check-in Button ======= */
 .btn-area { text-align: center; padding: 10px 0 4px; }
@@ -170,22 +190,22 @@ body {
   width: 100px; height: 100px; border-radius: 50%;
   border: none; font-size: 16px; font-weight: 800;
   cursor: pointer; transition: all 0.3s;
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #fff; box-shadow: 0 8px 30px rgba(108,92,231,0.4);
   letter-spacing: 1px;
 }
 .checkin-btn:hover { transform: scale(1.04); }
 .checkin-btn:active { transform: scale(0.96); }
 .checkin-btn.done {
-  background: #1e1e32; color: #6c5ce7;
-  box-shadow: 0 0 0 3px #6c5ce7;
+  background: var(--bg-dark); color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary);
 }
 .status-msg {
   margin-top: 10px; font-size: 13px; font-weight: 600;
   min-height: 18px; transition: all 0.3s;
 }
-.status-msg.success { color: #00cec9; }
-.status-msg.already { color: #fdcb6e; }
+.status-msg.success { color: var(--success); }
+.status-msg.already { color: var(--gold); }
 .status-msg.broken { color: #e17055; }
 
 /* ======= Reward Overlay ======= */
@@ -215,7 +235,7 @@ body {
   width: 100%; border-radius: 12px; display: block;
 }
 .reward-claim {
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #fff; border: none; padding: 14px 40px;
   border-radius: 30px; font-size: 16px; font-weight: 700;
   cursor: pointer; width: 100%;
@@ -249,26 +269,26 @@ body {
 }
 .daily-claim-text {
   margin-top: 12px; font-size: 15px; font-weight: 700;
-  color: #f9ca24; letter-spacing: 1px;
+  color: var(--gold); letter-spacing: 1px;
 }
 
 /* ======= Bottom Nav ======= */
 .bottom-nav {
   display: flex; justify-content: space-around;
-  padding: 12px 0; background: #1a1a2e; border-radius: 20px;
+  padding: 12px 0; background: var(--bg-nav); border-radius: 20px;
   margin: 16px 0 0;
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   color: #555; font-size: 10px;
 }
-.nav-item.active { color: #a29bfe; }
+.nav-item.active { color: var(--primary-light); }
 .nav-icon { font-size: 18px; }
 
 /* ======= Notice Banner ======= */
 .notice-banner {
-  background: linear-gradient(135deg, #f9ca24, #f0932b);
-  color: #1a1a2e;
+  background: linear-gradient(135deg, var(--gold), #f0932b);
+  color: var(--bg-nav);
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0 2px 12px;
@@ -308,6 +328,7 @@ body {
 .maintenance-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; color: #aaa; }
 .maintenance-title { font-size: 22px; color: #f0f6fc; font-weight: 700; margin-bottom: 8px; }
 .maintenance-desc { font-size: 14px; color: #8b949e; }
+.tab-page[style*="display:none"] { display: none !important; }
 </style>
 </head>
 <body>
@@ -371,13 +392,19 @@ body {
   </div><!-- /tabRewards -->
 
   <!-- Tab: Lucky Shell -->
+  <div class="tab-page" id="tabLuckyShell" style="display:none">
+    <iframe id="luckyShellFrame" src="lucky-shell/index.html" style="width:100%;height:100%;border:none;position:absolute;top:0;left:0;"></iframe>
+  </div><!-- /tabLuckyShell -->
+
+  <!-- Tab: Slot Win Rate -->
   <div class="tab-page" id="tabSlot" style="display:none">
     <iframe id="slotFrame" src="slot.html" style="width:100%;height:100%;border:none;position:absolute;top:0;left:0;"></iframe>
   </div><!-- /tabSlot -->
 
   <div class="bottom-nav">
-    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">??</span>Rewards</div>
-    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">??</span>Lucky Shell</div>
+    <div class="nav-item active" id="navRewards" onclick="switchTab('rewards')"><span class="nav-icon">🎁</span>Rewards</div>
+    <div class="nav-item" id="navLuckyShell" onclick="switchTab('lucky')"><span class="nav-icon">🐚</span>Lucky Shell</div>
+    <div class="nav-item" id="navSlot" onclick="switchTab('slot')"><span class="nav-icon">🎰</span>Slot Win Rate</div>
   </div>
 </div>
 
@@ -417,11 +444,16 @@ let token, user;
 let S = {
   appTitle: 'CheckIn', gridTitle: 'Daily Random RM8 ~ RM388',
   claimText: 'Pls Screenshot To Claim', comeBackText: 'Come back tomorrow for Day {day}!',
-  tabRewards: 'Rewards', tabSlot: 'Lucky Shell',
+  tabRewards: 'Rewards', tabLuckyShell: 'Lucky Shell', tabSlot: 'Slot Win Rate',
   rewardGifs: {7:'day7.gif',14:'day14.gif',21:'day21.gif',30:'day30.gif'},
   dailyGif: 'daily.gif', rewardBg: 'reward_bg.png',
   slotUrl: 'slot.html',
-  loginPage: 'login_apk.html', registerPage: 'register_apk.html'
+  luckyShellUrl: 'lucky-shell/index.html',
+  loginPage: 'login_apk.html', registerPage: 'register_apk.html',
+  themePrimary: '#6c5ce7', themePrimaryLight: '#a29bfe', themePrimaryDark: '#5a4bd1',
+  themeBgPhone: '#0f0f1a', themeBgCard: '#151525', themeBgNav: '#1a1a2e',
+  themeBgDark: '#1e1e32', themeGold: '#f9ca24', themeSuccess: '#00cec9',
+  themeRadius: '36'
 };
 
 async function loadSettings() {
@@ -435,6 +467,7 @@ async function loadSettings() {
       S.claimText = s.claimText || S.claimText;
       S.comeBackText = s.comeBackText || S.comeBackText;
       S.tabRewards = s.tabRewards || S.tabRewards;
+      S.tabLuckyShell = s.tabLuckyShell || S.tabLuckyShell;
       S.tabSlot = s.tabSlot || S.tabSlot;
       S.rewardGifs = {
         7: s.rewardGifDay7 || 'day7.gif', 14: s.rewardGifDay14 || 'day14.gif',
@@ -443,11 +476,23 @@ async function loadSettings() {
       S.dailyGif = s.dailyGif || 'daily.gif';
       S.rewardBg = s.rewardBg || 'reward_bg.png';
       S.slotUrl = s.slotUrl || 'slot.html';
+      S.luckyShellUrl = s.luckyShellUrl || 'lucky-shell/index.html';
       S.loginPage = s.loginPage || 'login_apk.html';
       S.registerPage = s.registerPage || 'register_apk.html';
       S.noticeText = s.noticeText || '';
       S.noticeEnabled = s.noticeEnabled || 'false';
       S.maintenanceMode = s.maintenanceMode || 'false';
+      // Theme
+      S.themePrimary = s.themePrimary || S.themePrimary;
+      S.themePrimaryLight = s.themePrimaryLight || S.themePrimaryLight;
+      S.themePrimaryDark = s.themePrimaryDark || S.themePrimaryDark;
+      S.themeBgPhone = s.themeBgPhone || S.themeBgPhone;
+      S.themeBgCard = s.themeBgCard || S.themeBgCard;
+      S.themeBgNav = s.themeBgNav || S.themeBgNav;
+      S.themeBgDark = s.themeBgDark || S.themeBgDark;
+      S.themeGold = s.themeGold || S.themeGold;
+      S.themeSuccess = s.themeSuccess || S.themeSuccess;
+      S.themeRadius = s.themeRadius || S.themeRadius;
     }
   } catch(e) { console.log('Settings load skipped, using defaults'); }
   applySettings();
@@ -457,9 +502,11 @@ function applySettings() {
   document.title = S.appTitle;
   var el = document.querySelector('.app-title'); if (el) el.textContent = S.appTitle;
   el = document.getElementById('gridTitle'); if (el) el.textContent = S.gridTitle;
-  el = document.getElementById('navRewards'); if (el) el.innerHTML = '<span class="nav-icon">??</span>' + S.tabRewards;
-  el = document.getElementById('navSlot'); if (el) el.innerHTML = '<span class="nav-icon">??</span>' + S.tabSlot;
+  el = document.getElementById('navRewards'); if (el) el.innerHTML = '<span class="nav-icon">🎁</span>' + S.tabRewards;
+  el = document.getElementById('navLuckyShell'); if (el) el.innerHTML = '<span class="nav-icon">🐚</span>' + S.tabLuckyShell;
+  el = document.getElementById('navSlot'); if (el) el.innerHTML = '<span class="nav-icon">🎰</span>' + S.tabSlot;
   el = document.getElementById('slotFrame'); if (el) el.src = S.slotUrl;
+  el = document.getElementById('luckyShellFrame'); if (el) el.src = S.luckyShellUrl;
   document.querySelectorAll('.daily-claim-text').forEach(function(e) { e.textContent = S.claimText; });
   el = document.querySelector('.daily-gif'); if (el) el.src = S.dailyGif;
   el = document.getElementById('phoneBg'); if (el && S.rewardBg) el.style.backgroundImage = "url('" + S.rewardBg + "')";
@@ -489,6 +536,20 @@ function applySettings() {
   } else {
     if (mo) mo.style.display = 'none';
   }
+
+  // Theme CSS variables
+  var r = document.documentElement;
+  r.style.setProperty('--primary', S.themePrimary);
+  r.style.setProperty('--primary-light', S.themePrimaryLight);
+  r.style.setProperty('--primary-dark', S.themePrimaryDark);
+  r.style.setProperty('--bg-phone', S.themeBgPhone);
+  r.style.setProperty('--bg-card', S.themeBgCard);
+  r.style.setProperty('--bg-nav', S.themeBgNav);
+  r.style.setProperty('--bg-dark', S.themeBgDark);
+  r.style.setProperty('--gold', S.themeGold);
+  r.style.setProperty('--success', S.themeSuccess);
+  r.style.setProperty('--phone-radius', S.themeRadius + 'px');
+  r.style.setProperty('--card-radius', Math.max(4, parseInt(S.themeRadius) - 22) + 'px');
 }
 
 function checkAuth() {
@@ -536,8 +597,7 @@ let appState = {
   streakDay: 0,
   milestonesClaimed: { day7: 0, day14: 0, day21: 0, day30: 0 },
   history: [],
-  lastDate: null,
-  streakBroken: false
+  lastDate: null
 };
 
 async function loadState() {
@@ -546,23 +606,10 @@ async function loadState() {
     if (!data.success) return;
     appState.totalDays = data.totalDays || 0;
     appState.checkedToday = data.checkedToday;
-    appState.streakDay = data.streakDay || 0;
-    appState.milestonesClaimed = data.milestonesClaimed || { day7: 0, day14: 0, day21: 0, day30: 0 };
+    appState.streakDay = data.streakDay;
+    appState.milestonesClaimed = data.milestonesClaimed;
     appState.history = data.history || [];
     appState.lastDate = data.lastDate;
-
-    // Client-side broken streak detection
-    if (appState.lastDate && !appState.checkedToday) {
-      const last = new Date(appState.lastDate + 'T00:00:00');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const diffDays = Math.floor((today - last) / 86400000);
-      if (diffDays > 1) {
-        appState.streakBroken = true;
-        appState.totalDays = 0;
-        appState.streakDay = 0;
-      }
-    }
   } catch (e) {
     console.error('Failed to load state:', e);
   }
@@ -584,8 +631,7 @@ async function doCheckin() {
 
     appState.checkedToday = data.checkedToday;
     appState.streakDay = data.streakDay;
-    appState.totalDays = data.totalDays || appState.totalDays;
-    appState.streakBroken = false;
+    appState.totalDays = data.totalDays || 0;
     appState.lastDate = new Date().toISOString().slice(0, 10);
     if (!appState.history.includes(appState.lastDate)) {
       appState.history.push(appState.lastDate);
@@ -607,7 +653,7 @@ async function doCheckin() {
 
 function closeDailyPopup() {
   document.getElementById('dailyOverlay').classList.remove('show');
-  const displayDay = (appState.totalDays || 0) === 0 ? 0 : (((appState.totalDays || 0) - 1) % 30) + 1;
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
   const nextDay = displayDay % 30 + 1;
   showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
@@ -622,7 +668,7 @@ function showReward(day) {
 
 function claimReward() {
   document.getElementById('rewardOverlay').classList.remove('show');
-  const displayDay = (appState.totalDays || 0) === 0 ? 0 : (((appState.totalDays || 0) - 1) % 30) + 1;
+  const displayDay = appState.totalDays === 0 ? 0 : ((appState.totalDays - 1) % 30) + 1;
   const nextDay = displayDay % 30 + 1;
   showStatus(S.comeBackText.replace('{day}', nextDay), 'success');
 }
@@ -637,22 +683,16 @@ function showStatus(msg, cls) {
 // ========== UI ==========
 function updateUI() {
   const streak = appState.streakDay;
-  const totalDays = appState.totalDays || 0;
+  const totalDays = appState.totalDays;
   const displayDay = totalDays === 0 ? 0 : ((totalDays - 1) % 30) + 1;
   const milestoneDays = [7, 14, 21, 30];
   const icons = [S.rewardGifs[7], S.rewardGifs[14], S.rewardGifs[21], S.rewardGifs[30]];
   const labels = ['Day 7','Day 14','Day 21','Day 30'];
 
   document.getElementById('dayNum').textContent = displayDay;
-  document.getElementById('daySub').textContent = displayDay === 0 ? 'streak broken' : 'days';
 
   // Progress bar
   document.getElementById('progressBar').style.width = (displayDay / 30 * 100) + '%';
-
-  // Show broken streak message
-  if (appState.streakBroken && !appState.checkedToday) {
-    showStatus('Streak broken. Sign in to start a new streak!', 'broken');
-  }
 
   // 30-Day Grid
   const grid = document.getElementById('dayGrid');
@@ -684,7 +724,7 @@ function updateUI() {
     if (milestoneDays.includes(i)) {
       const badge = document.createElement('span');
       badge.className = 'badge';
-      badge.textContent = appState.milestonesClaimed['day' + i] ? '?' : '?';
+      badge.textContent = appState.milestonesClaimed['day' + i] ? '✓' : '⭐';
       div.appendChild(badge);
     }
 
@@ -710,7 +750,7 @@ function updateUI() {
 
     const reward = document.createElement('div');
     reward.className = 'ms-reward';
-    reward.textContent = appState.milestonesClaimed['day' + m] ? '? Bonus' : 'Bonus';
+    reward.textContent = appState.milestonesClaimed['day' + m] ? '✓ Bonus' : 'Bonus';
 
     card.appendChild(icon);
     card.appendChild(dayEl);
@@ -736,8 +776,10 @@ if (checkAuth()) {
 
 function switchTab(tab) {
   document.getElementById('tabRewards').style.display = tab === 'rewards' ? 'block' : 'none';
+  document.getElementById('tabLuckyShell').style.display = tab === 'lucky' ? 'block' : 'none';
   document.getElementById('tabSlot').style.display = tab === 'slot' ? 'block' : 'none';
   document.getElementById('navRewards').classList.toggle('active', tab === 'rewards');
+  document.getElementById('navLuckyShell').classList.toggle('active', tab === 'lucky');
   document.getElementById('navSlot').classList.toggle('active', tab === 'slot');
 }
 
@@ -756,3 +798,4 @@ setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
+
